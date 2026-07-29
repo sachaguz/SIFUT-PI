@@ -12,6 +12,7 @@ async function main() {
 
   console.log('Seeding database...');
 
+  // --- Users ---
   const adminPassword = await bcrypt.hash('Admin1234!', 12);
   const orgPassword = await bcrypt.hash('Org12345!', 12);
   const userPassword = await bcrypt.hash('User1234!', 12);
@@ -25,6 +26,52 @@ async function main() {
   await prisma.user.create({
     data: { nombre: 'Luis', apellido: 'Martínez', email: 'usuario@sifut.com', password: userPassword, role: 'USUARIO' },
   });
+
+  // --- Sedes ---
+  const sede1 = await prisma.sede.create({
+    data: { nombre: 'Sede Centro Histórico', direccion: 'Av. Corregidora Norte 128, Centro Histórico, Querétaro', telefono: '442 214 5588', activa: true },
+  });
+  const sede2 = await prisma.sede.create({
+    data: { nombre: 'Sede Juriquilla', direccion: 'Blvd. Juriquilla Privada 3000, Juriquilla, Querétaro', telefono: '442 238 1200', activa: true },
+  });
+  const sede3 = await prisma.sede.create({
+    data: { nombre: 'Sede Corregidora', direccion: 'Av. Camino Real 445, Corregidora, Qro.', telefono: '442 350 7711', activa: true },
+  });
+  const sede4 = await prisma.sede.create({
+    data: { nombre: 'Sede El Marqués', direccion: 'Carretera Estatal 420 s/n, El Marqués, Qro.', telefono: '442 101 9000', activa: false },
+  });
+
+  // --- Canchas ---
+  const cancha1 = await prisma.cancha.create({
+    data: { sedeId: sede1.id, nombre: 'Cancha 1', tipo: 'FUTBOL7', superficie: 'Pasto sintético', capacidad: 14, precioPorHora: 500 },
+  });
+  const cancha2 = await prisma.cancha.create({
+    data: { sedeId: sede1.id, nombre: 'Cancha 2', tipo: 'FUTBOL11', superficie: 'Pasto natural', capacidad: 22, precioPorHora: 750 },
+  });
+  const cancha3 = await prisma.cancha.create({
+    data: { sedeId: sede2.id, nombre: 'Cancha 1', tipo: 'FUTBOL5', superficie: 'Pasto sintético', capacidad: 10, precioPorHora: 450 },
+  });
+  const cancha4 = await prisma.cancha.create({
+    data: { sedeId: sede3.id, nombre: 'Cancha 1', tipo: 'FUTBOL5', superficie: 'Pasto sintético', capacidad: 10, precioPorHora: 480 },
+  });
+  const cancha5 = await prisma.cancha.create({
+    data: { sedeId: sede3.id, nombre: 'Cancha 2', tipo: 'FUTBOL7', superficie: 'Pasto sintético', capacidad: 14, precioPorHora: 600 },
+  });
+  const cancha6 = await prisma.cancha.create({
+    data: { sedeId: sede4.id, nombre: 'Cancha 1', tipo: 'FUTBOL7', superficie: 'Pasto sintético', capacidad: 14, precioPorHora: 550 },
+  });
+
+  // --- Horarios ---
+  const horas = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
+  for (const cancha of [cancha1, cancha2, cancha3, cancha4, cancha5, cancha6]) {
+    for (let dia = 0; dia <= 6; dia++) {
+      for (let i = 0; i < horas.length - 1; i++) {
+        await prisma.horario.create({
+          data: { canchaId: cancha.id, diaSemana: dia, horaInicio: horas[i], horaFin: horas[i + 1], disponible: true },
+        });
+      }
+    }
+  }
 
   console.log('Seed completed successfully!');
   console.log('');
