@@ -9,10 +9,10 @@ import { colors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator();
 
-const ROLE_SCREEN = {
-  ADMIN: 'AdminRoot',
-  ORGANIZADOR: 'OrganizadorRoot',
-  USUARIO: 'UsuarioRoot',
+const ROLE_CONFIG = {
+  ADMIN: { name: 'AdminRoot', component: AdminStack },
+  ORGANIZADOR: { name: 'OrganizadorRoot', component: OrganizadorStack },
+  USUARIO: { name: 'UsuarioRoot', component: UsuarioStack },
 };
 
 export default function RootNavigator() {
@@ -26,18 +26,14 @@ export default function RootNavigator() {
     );
   }
 
-  const initialRoute = user ? ROLE_SCREEN[user.role] || 'Auth' : 'Auth';
+  const roleConfig = user ? ROLE_CONFIG[user.role] : null;
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
-      {!user ? (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!user || !roleConfig ? (
         <Stack.Screen name="Auth" component={AuthStack} />
       ) : (
-        <>
-          <Stack.Screen name="AdminRoot" component={AdminStack} />
-          <Stack.Screen name="OrganizadorRoot" component={OrganizadorStack} />
-          <Stack.Screen name="UsuarioRoot" component={UsuarioStack} />
-        </>
+        <Stack.Screen name={roleConfig.name} component={roleConfig.component} />
       )}
     </Stack.Navigator>
   );
