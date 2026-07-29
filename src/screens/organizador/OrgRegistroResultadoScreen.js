@@ -7,7 +7,7 @@ import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import PillSelector from '../../components/PillSelector';
 import Card from '../../components/Card';
-import api from '../../services/api';
+import api, { esFaseEliminatoria, faseLabel } from '../../services/api';
 import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 const TIPOS_GOL = [
@@ -209,7 +209,7 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
-  const isLiguilla = partido.fase === 'LIGUILLA';
+  const isLiguilla = esFaseEliminatoria(partido.fase);
 
   const cargarDatos = useCallback(() => {
     return Promise.all([
@@ -312,11 +312,15 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
         body.penalesLocal = parseInt(penalesLocal, 10);
         body.penalesVisitante = parseInt(penalesVisitante, 10);
       }
-      await api.patch(`/partidos/${partido.id}/resultado`, body);
+      const { data } = await api.patch(`/partidos/${partido.id}/resultado`, body);
+
+      const siguienteMsg = data.siguienteFaseGenerada
+        ? `\n\n¡${faseLabel(data.siguienteFaseGenerada)} generada!`
+        : '';
 
       Alert.alert(
         'Resultado guardado',
-        `${partido.local} ${golesLocal} - ${golesVisitante} ${partido.visitante}`,
+        `${partido.local} ${golesLocal}-${golesVisitante} ${partido.visitante}${siguienteMsg}`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (err) {
@@ -393,7 +397,7 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
 
       {isLiguilla && (
         <Card>
-          <Text style={styles.cardTitle}>Penales (solo eliminatoria)</Text>
+          <Text style={styles.cardTitle}>Penales ({faseLabel(partido.fase)}, si aplica)</Text>
           <View style={styles.rowInputs}>
             <FormInput
               label={partido.local}

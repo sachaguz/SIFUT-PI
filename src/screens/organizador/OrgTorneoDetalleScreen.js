@@ -6,7 +6,7 @@ import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import PrimaryButton from '../../components/PrimaryButton';
 import ListRow from '../../components/ListRow';
-import api, { formatDate, estadoLabel } from '../../services/api';
+import api, { esFaseEliminatoria, estadoLabel, faseLabel, formatDate } from '../../services/api';
 import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 export default function OrgTorneoDetalleScreen({ navigation, route }) {
@@ -32,9 +32,9 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
     return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
   }
 
-  const jornadaPartidos = (torneo.partidos || []).filter((p) => p.fase !== 'LIGUILLA');
-  const liguiPartidos = (torneo.partidos || []).filter((p) => p.fase === 'LIGUILLA');
-  const proximosPartidos = (torneo.partidos || []).filter((p) => p.estado === 'PENDIENTE');
+  const jornadaPartidos = (torneo.partidos || []).filter((p) => !esFaseEliminatoria(p.fase));
+  const liguiPartidos = (torneo.partidos || []).filter((p) => esFaseEliminatoria(p.fase));
+  const proximosPartidos = (torneo.partidos || []).filter((p) => p.estado === 'PENDIENTE' && !esFaseEliminatoria(p.fase));
   const hasJornadas = jornadaPartidos.length > 0;
   const hasLiguilla = liguiPartidos.length > 0;
 
@@ -131,18 +131,38 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
 
       {liguiPartidos.length > 0 && (
         <>
-          <Text style={typography.subtitle}>Liguilla</Text>
-          <View style={{ marginTop: spacing.sm }}>
-            {liguiPartidos.map((partido) => (
-              <ListRow
-                key={partido.id}
-                icon="trophy-outline"
-                title={`${partido.equipoLocal?.nombre || ''} vs ${partido.equipoVisitante?.nombre || ''}`}
-                subtitle={`${formatDate(partido.fecha)} · ${partido.hora}`}
-                right={<Badge label={estadoLabel(partido.estado)} tone={partido.estado === 'FINALIZADO' ? 'success' : 'warning'} />}
-              />
-            ))}
-          </View>
+          <Text style={[typography.subtitle, { marginBottom: spacing.sm }]}>Liguilla</Text>
+          {['CUARTOS', 'SEMIFINAL', 'FINAL'].map((faseKey) => {
+            const partidosFase = liguiPartidos.filter((p) => p.fase === faseKey);
+            if (partidosFase.length === 0) return null;
+            return (
+              <View key={faseKey} style={{ marginBottom: spacing.md }}>
+                <Text style={styles.faseHeader}>{faseLabel(faseKey)}</Text>
+                {partidosFase.map((partido) => {
+                  const local = partido.equipoLocal?.nombre || '';
+                  const visitante = partido.equipoVisitante?.nombre || '';
+                  const isFinalizado = partido.estado === 'FINALIZADO';
+                  return (
+                    <ListRow
+                      key={partido.id}
+                      icon="trophy-outline"
+                      title={isFinalizado ? `${local} ${partido.golesLocal}-${partido.golesVisitante} ${visitante}` : `${local} vs ${visitante}`}
+                      subtitle={`${formatDate(partido.fecha)} · ${partido.hora}`}
+                      right={<Badge label={estadoLabel(partido.estado)} tone={isFinalizado ? 'success' : 'warning'} />}
+                      onPress={() => isFinalizado
+                        ? navigation.navigate('PartidoDetalle', {
+                            partido: { ...partido, local, visitante, torneo: torneo.nombre, fecha: formatDate(partido.fecha) },
+                          })
+                        : navigation.navigate('OrgRegistroResultado', {
+                            partido: { ...partido, local, visitante, torneo: torneo.nombre, fecha: formatDate(partido.fecha) },
+                          })
+                      }
+                    />
+                  );
+                })}
+              </View>
+            );
+          })}
         </>
       )}
 
@@ -242,6 +262,11 @@ const styles = StyleSheet.create({
   empty: {
     ...typography.body,
     color: colors.textMuted,
+  },
+  faseHeader: {
+    ...typography.eyebrow,
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
   },
   actions: {
     flexDirection: 'row',

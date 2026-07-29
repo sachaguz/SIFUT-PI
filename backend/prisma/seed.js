@@ -34,6 +34,30 @@ function generarNombreJugador(seed) {
   return `${nombre} ${apellido}`;
 }
 
+function generarRoundRobin(equipos) {
+  const teams = [...equipos];
+  const n = teams.length;
+  const rounds = n - 1;
+  const rotation = teams.slice(1);
+  const fixtures = [];
+
+  for (let round = 0; round < rounds; round++) {
+    const current = [teams[0], ...rotation];
+    for (let i = 0; i < n / 2; i++) {
+      fixtures.push({ jornada: round + 1, local: current[i], visitante: current[n - 1 - i] });
+    }
+    rotation.push(rotation.shift());
+  }
+
+  return fixtures;
+}
+
+const GOLES_POSIBLES = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4];
+
+function golAleatorio() {
+  return GOLES_POSIBLES[Math.floor(Math.random() * GOLES_POSIBLES.length)];
+}
+
 async function main() {
   const existing = await prisma.user.findUnique({ where: { email: 'admin@sifut.com' } });
   if (existing) {
@@ -118,6 +142,7 @@ async function main() {
   });
 
   let seed = 0;
+  const equiposLigaMX = [];
   for (const nombreEquipo of LIGA_MX_EQUIPOS) {
     const equipo = await prisma.equipo.create({
       data: {
@@ -126,6 +151,7 @@ async function main() {
         torneos: { connect: { id: ligaMX.id } },
       },
     });
+    equiposLigaMX.push(equipo);
 
     const jugadores = POSICIONES_PLANTILLA.map((posicion, i) => ({
       nombre: generarNombreJugador(seed + i),
@@ -137,6 +163,27 @@ async function main() {
 
     await prisma.jugador.createMany({ data: jugadores });
   }
+
+  // --- Todas las jornadas de la Liga MX, ya finalizadas con marcador ---
+  // (para poder probar la tabla de posiciones y generar la liguilla de inmediato)
+  const jornadasLigaMX = generarRoundRobin(equiposLigaMX);
+  const partidosLigaMX = jornadasLigaMX.map(({ jornada, local, visitante }) => {
+    const fecha = new Date(ligaMX.fechaInicio);
+    fecha.setDate(fecha.getDate() + (jornada - 1) * 7);
+    return {
+      torneoId: ligaMX.id,
+      equipoLocalId: local.id,
+      equipoVisitanteId: visitante.id,
+      fecha,
+      hora: '17:00',
+      jornada,
+      fase: 'JORNADA',
+      estado: 'FINALIZADO',
+      golesLocal: golAleatorio(),
+      golesVisitante: golAleatorio(),
+    };
+  });
+  await prisma.partido.createMany({ data: partidosLigaMX });
 
   console.log('Seed completed successfully!');
   console.log('');

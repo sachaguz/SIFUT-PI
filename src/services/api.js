@@ -91,4 +91,15 @@ export function estadoLabel(estado) {
   return map[estado] || estado;
 }
 
+const FASES_ELIMINATORIA = ['CUARTOS', 'SEMIFINAL', 'FINAL'];
+
+export function esFaseEliminatoria(fase) {
+  return FASES_ELIMINATORIA.includes(fase);
+}
+
+export function faseLabel(fase) {
+  const map = { JORNADA: 'Jornada', CUARTOS: 'Cuartos de Final', SEMIFINAL: 'Semifinal', FINAL: 'Final' };
+  return map[fase] || fase;
+}
+
 export default api;

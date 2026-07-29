@@ -1,4 +1,5 @@
 const prisma = require('../config/database');
+const { avanzarSiCorresponde } = require('../services/liguilla.service');
 
 async function getAll(req, res, next) {
   try {
@@ -108,7 +109,13 @@ async function registrarResultado(req, res, next) {
         },
       },
     });
-    res.json(partido);
+
+    let siguienteFaseGenerada = null;
+    if (partido.fase === 'CUARTOS' || partido.fase === 'SEMIFINAL') {
+      siguienteFaseGenerada = await avanzarSiCorresponde(partido.torneoId, partido.fase);
+    }
+
+    res.json({ ...partido, siguienteFaseGenerada });
   } catch (err) {
     next(err);
   }

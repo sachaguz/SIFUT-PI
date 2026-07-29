@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import api from '../../services/api';
+import api, { esFaseEliminatoria, faseLabel } from '../../services/api';
 import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 const EVENTO_MARCA = {
@@ -57,7 +57,7 @@ export default function PartidoDetalleScreen({ route }) {
           </Text>
         )}
         <Text style={styles.meta}>
-          {torneo} · {cancha}{partido.fase === 'LIGUILLA' ? ' · Liguilla' : ''}
+          {torneo} · {cancha}{esFaseEliminatoria(partido.fase) ? ` · ${faseLabel(partido.fase)}` : ''}
         </Text>
       </Card>
 

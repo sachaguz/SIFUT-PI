@@ -1,4 +1,5 @@
 const prisma = require('../config/database');
+const { esFaseEliminatoria, calcularTablaPosiciones } = require('../utils/bracket');
 
 const DIA_INDEX = { dom: 0, lun: 1, mar: 2, mie: 3, jue: 4, vie: 5, sab: 6 };
 
@@ -79,48 +80,12 @@ async function getTabla(req, res, next) {
       where: { id: req.params.id },
       include: {
         equipos: { select: { id: true, nombre: true } },
-        partidos: { where: { estado: 'FINALIZADO' } },
+        partidos: { where: { estado: 'FINALIZADO', fase: 'JORNADA' } },
       },
     });
     if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
 
-    const stats = {};
-    for (const eq of torneo.equipos) {
-      stats[eq.id] = { equipo: eq.nombre, jj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
-    }
-
-    for (const p of torneo.partidos) {
-      const local = stats[p.equipoLocalId];
-      const visitante = stats[p.equipoVisitanteId];
-      if (!local || !visitante) continue;
-
-      local.jj++;
-      visitante.jj++;
-      local.gf += p.golesLocal;
-      local.gc += p.golesVisitante;
-      visitante.gf += p.golesVisitante;
-      visitante.gc += p.golesLocal;
-
-      if (p.golesLocal > p.golesVisitante) {
-        local.g++;
-        local.pts += 3;
-        visitante.p++;
-      } else if (p.golesLocal < p.golesVisitante) {
-        visitante.g++;
-        visitante.pts += 3;
-        local.p++;
-      } else {
-        local.e++;
-        visitante.e++;
-        local.pts += 1;
-        visitante.pts += 1;
-      }
-    }
-
-    const tabla = Object.values(stats)
-      .map((s) => ({ ...s, dg: s.gf - s.gc }))
-      .sort((a, b) => b.pts - a.pts || b.dg - a.dg);
-
+    const tabla = calcularTablaPosiciones(torneo.equipos, torneo.partidos);
     tabla.forEach((row, i) => (row.pos = i + 1));
 
     res.json(tabla);
@@ -247,30 +212,13 @@ async function generarLiguilla(req, res, next) {
     if (!torneo) return res.status(404).json({ error: 'Torneo no encontrado' });
 
     const existingLiguilla = await prisma.partido.findMany({
-      where: { torneoId: torneo.id, fase: 'LIGUILLA' },
+      where: { torneoId: torneo.id },
     });
-    if (existingLiguilla.length > 0) {
+    if (existingLiguilla.some((p) => esFaseEliminatoria(p.fase))) {
       return res.status(400).json({ error: 'Ya existe una liguilla generada.' });
     }
 
-    const stats = {};
-    for (const eq of torneo.equipos) {
-      stats[eq.id] = { equipoId: eq.id, nombre: eq.nombre, pts: 0, dg: 0, gf: 0 };
-    }
-    for (const p of torneo.partidos) {
-      const local = stats[p.equipoLocalId];
-      const visitante = stats[p.equipoVisitanteId];
-      if (!local || !visitante) continue;
-      local.gf += p.golesLocal;
-      local.dg += p.golesLocal - p.golesVisitante;
-      visitante.gf += p.golesVisitante;
-      visitante.dg += p.golesVisitante - p.golesLocal;
-      if (p.golesLocal > p.golesVisitante) { local.pts += 3; }
-      else if (p.golesLocal < p.golesVisitante) { visitante.pts += 3; }
-      else { local.pts += 1; visitante.pts += 1; }
-    }
-
-    const ranking = Object.values(stats).sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
+    const ranking = calcularTablaPosiciones(torneo.equipos, torneo.partidos);
 
     if (ranking.length < 8) {
       return res.status(400).json({ error: `Se necesitan al menos 8 equipos clasificados. Solo hay ${ranking.length}.` });
@@ -290,20 +238,20 @@ async function generarLiguilla(req, res, next) {
     });
     const nextJornada = (lastJornada._max.jornada || 0) + 1;
 
-    const fixtures = matchups.map(([home, away], i) => ({
+    const fixtures = matchups.map(([home, away]) => ({
       torneoId: torneo.id,
       equipoLocalId: home.equipoId,
       equipoVisitanteId: away.equipoId,
       fecha: new Date(torneo.fechaFin),
       hora: '17:00',
       jornada: nextJornada,
-      fase: 'LIGUILLA',
+      fase: 'CUARTOS',
     }));
 
     await prisma.partido.createMany({ data: fixtures });
 
     const partidos = await prisma.partido.findMany({
-      where: { torneoId: torneo.id, fase: 'LIGUILLA' },
+      where: { torneoId: torneo.id, fase: 'CUARTOS' },
       include: {
         equipoLocal: { select: { id: true, nombre: true } },
         equipoVisitante: { select: { id: true, nombre: true } },
@@ -312,7 +260,7 @@ async function generarLiguilla(req, res, next) {
     });
 
     res.status(201).json({
-      clasificados: top8.map((t, i) => ({ pos: i + 1, equipo: t.nombre, pts: t.pts, dg: t.dg })),
+      clasificados: top8.map((t, i) => ({ pos: i + 1, equipo: t.equipo, pts: t.pts, dg: t.dg })),
       partidos,
     });
   } catch (err) {
