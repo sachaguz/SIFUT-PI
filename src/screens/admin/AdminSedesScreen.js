@@ -1,15 +1,27 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
 import PrimaryButton from '../../components/PrimaryButton';
-import { SEDES } from '../../data/sedes';
-import { spacing } from '../../theme/colors';
+import api from '../../services/api';
+import { colors, spacing } from '../../theme/colors';
 
 export default function AdminSedesScreen({ navigation }) {
-  const [sedes] = useState(SEDES);
+  const [sedes, setSedes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      api.get('/sedes').then((r) => setSedes(r.data)).finally(() => setLoading(false));
+    }, [])
+  );
+
+  if (loading) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer>
@@ -21,7 +33,7 @@ export default function AdminSedesScreen({ navigation }) {
           icon="business-outline"
           title={sede.nombre}
           subtitle={sede.direccion}
-          meta={`${sede.telefono}  ·  ${sede.canchas.length} canchas`}
+          meta={`${sede.telefono}  ·  ${sede.canchas?.length || 0} canchas`}
           right={<Badge label={sede.activa ? 'Activa' : 'Inactiva'} tone={sede.activa ? 'success' : 'neutral'} />}
           onPress={() => navigation.navigate('AdminSedeForm', { sede })}
         />

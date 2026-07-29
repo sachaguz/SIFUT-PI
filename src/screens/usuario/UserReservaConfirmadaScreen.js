@@ -6,7 +6,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { colors, spacing, typography } from '../../theme/colors';
 
 export default function UserReservaConfirmadaScreen({ navigation, route }) {
-  const { sede, cancha, fecha, hora, precio, folio } = route.params;
+  const { sedeName, canchaName, fechaLabel, hora, precio, folio } = route.params;
 
   return (
     <ScreenContainer>
@@ -19,10 +19,10 @@ export default function UserReservaConfirmadaScreen({ navigation, route }) {
         <Ionicons name="qr-code-outline" size={96} color={colors.text} style={{ alignSelf: 'center' }} />
         <Text style={styles.folio}>Folio: {folio}</Text>
         <Text style={styles.detail}>
-          {sede} · {cancha}
+          {sedeName} · {canchaName}
         </Text>
         <Text style={styles.detail}>
-          {fecha} · {hora}
+          {fechaLabel} · {hora}
         </Text>
         <Text style={styles.detail}>Total pagado: ${precio} MXN</Text>
       </Card>

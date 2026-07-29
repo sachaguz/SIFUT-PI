@@ -4,27 +4,30 @@ import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
-import { loginAs } from '../../navigation/navigationRef';
+import { useAuth } from '../../context/AuthContext';
 import { colors, fonts, radius, spacing, typography } from '../../theme/colors';
-
-const ROLES = [
-  { key: 'AdminRoot', label: 'Administrador' },
-  { key: 'OrganizadorRoot', label: 'Organizador' },
-  { key: 'UsuarioRoot', label: 'Usuario' },
-];
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [role, setRole] = useState(ROLES[2].key);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Faltan datos', 'Ingresa tu correo y contraseña.');
       return;
     }
-    loginAs(role);
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Error al iniciar sesión. Verifica tu conexión.';
+      Alert.alert('Error', msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,22 +70,7 @@ export default function LoginScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.roleLabel}>Selecciona tu rol (demo)</Text>
-      <View style={styles.roleSelector}>
-        {ROLES.map((item) => (
-          <TouchableOpacity
-            key={item.key}
-            style={[styles.rolePill, role === item.key && styles.rolePillActive]}
-            onPress={() => setRole(item.key)}
-          >
-            <Text style={[styles.rolePillText, role === item.key && styles.rolePillTextActive]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <PrimaryButton title="Ingresar" onPress={handleLogin} style={{ marginTop: spacing.md }} />
+      <PrimaryButton title="Ingresar" onPress={handleLogin} loading={loading} style={{ marginTop: spacing.md }} />
 
       <View style={styles.footer}>
         <Text style={typography.body}>¿No tienes cuenta? </Text>
@@ -133,35 +121,6 @@ const styles = StyleSheet.create({
   link: {
     color: colors.secondary,
     fontFamily: fonts.semiBold,
-  },
-  roleLabel: {
-    ...typography.eyebrow,
-    marginBottom: spacing.sm,
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  rolePill: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  rolePillActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  rolePillText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  rolePillTextActive: {
-    color: colors.accentText,
   },
   footer: {
     flexDirection: 'row',

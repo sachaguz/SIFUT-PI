@@ -1,44 +1,52 @@
-import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
 import PillSelector from '../../components/PillSelector';
 import PrimaryButton from '../../components/PrimaryButton';
-import { SEDES } from '../../data/sedes';
-import { spacing } from '../../theme/colors';
-
-const NOMBRES_SEDES = SEDES.map((sede) => sede.nombre);
+import api, { tipoLabel } from '../../services/api';
+import { colors, spacing } from '../../theme/colors';
 
 export default function AdminCanchasScreen({ navigation }) {
-  const [sedeSeleccionada, setSedeSeleccionada] = useState(NOMBRES_SEDES[0]);
+  const [sedes, setSedes] = useState([]);
+  const [sedeSeleccionada, setSedeSeleccionada] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const canchas = useMemo(() => {
-    const sede = SEDES.find((item) => item.nombre === sedeSeleccionada);
-    return sede ? sede.canchas.map((cancha) => ({ ...cancha, reservadaHoy: cancha.id % 2 === 1 })) : [];
-  }, [sedeSeleccionada]);
+  useFocusEffect(
+    useCallback(() => {
+      api.get('/sedes').then((r) => {
+        setSedes(r.data);
+        if (r.data.length > 0 && !sedeSeleccionada) setSedeSeleccionada(r.data[0].nombre);
+      }).finally(() => setLoading(false));
+    }, [])
+  );
+
+  const sedeActual = useMemo(() => sedes.find((s) => s.nombre === sedeSeleccionada), [sedes, sedeSeleccionada]);
+  const canchas = sedeActual?.canchas || [];
+  const nombresSedes = sedes.map((s) => s.nombre);
+
+  if (loading) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer>
       <SectionHeader eyebrow="Sucursales" title="Canchas" />
 
-      <PillSelector options={NOMBRES_SEDES} value={sedeSeleccionada} onChange={setSedeSeleccionada} />
+      <PillSelector options={nombresSedes} value={sedeSeleccionada} onChange={setSedeSeleccionada} />
 
       {canchas.map((cancha) => (
         <ListRow
           key={cancha.id}
           icon="football-outline"
           title={cancha.nombre}
-          subtitle={`${cancha.tipo} · ${cancha.superficie}`}
+          subtitle={`${tipoLabel(cancha.tipo)} · ${cancha.superficie}`}
           meta={`Capacidad máx. ${cancha.capacidad} personas`}
-          right={
-            <Badge
-              label={cancha.reservadaHoy ? 'Reservada hoy' : 'Sin reservar'}
-              tone={cancha.reservadaHoy ? 'warning' : 'neutral'}
-            />
-          }
-          onPress={() => navigation.navigate('AdminCanchaForm', { cancha, sede: sedeSeleccionada })}
+          right={<Badge label={`$${Number(cancha.precioPorHora)}/hr`} tone="neutral" />}
+          onPress={() => navigation.navigate('AdminCanchaForm', { cancha, sedeId: sedeActual?.id, sede: sedeSeleccionada })}
         />
       ))}
 
@@ -46,11 +54,11 @@ export default function AdminCanchasScreen({ navigation }) {
         <PrimaryButton
           title="Configurar horarios"
           variant="outline"
-          onPress={() => navigation.navigate('AdminHorarios', { sede: sedeSeleccionada })}
+          onPress={() => navigation.navigate('AdminHorarios', { sedeId: sedeActual?.id, sede: sedeSeleccionada })}
         />
         <PrimaryButton
           title="+ Agregar cancha"
-          onPress={() => navigation.navigate('AdminCanchaForm', { sede: sedeSeleccionada })}
+          onPress={() => navigation.navigate('AdminCanchaForm', { sedeId: sedeActual?.id, sede: sedeSeleccionada })}
           style={{ marginTop: spacing.sm }}
         />
       </View>

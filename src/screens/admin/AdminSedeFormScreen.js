@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import api from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 export default function AdminSedeFormScreen({ navigation, route }) {
@@ -12,15 +13,29 @@ export default function AdminSedeFormScreen({ navigation, route }) {
   const [direccion, setDireccion] = useState(sede?.direccion || '');
   const [telefono, setTelefono] = useState(sede?.telefono || '');
   const [activa, setActiva] = useState(sede?.activa ?? true);
+  const [saving, setSaving] = useState(false);
 
-  const handleGuardar = () => {
+  const handleGuardar = async () => {
     if (!nombre || !direccion) {
       Alert.alert('Faltan datos', 'Ingresa al menos el nombre y la dirección de la sede.');
       return;
     }
-    Alert.alert('Sede guardada', `${nombre} se guardó correctamente.`, [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    setSaving(true);
+    try {
+      const body = { nombre, direccion, telefono, activa };
+      if (sede) {
+        await api.put(`/sedes/${sede.id}`, body);
+      } else {
+        await api.post('/sedes', body);
+      }
+      Alert.alert('Sede guardada', `${nombre} se guardó correctamente.`, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'No se pudo guardar la sede.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -44,7 +59,7 @@ export default function AdminSedeFormScreen({ navigation, route }) {
 
       <View style={styles.actions}>
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
-        <PrimaryButton title="Guardar" onPress={handleGuardar} style={styles.actionBtn} />
+        <PrimaryButton title="Guardar" onPress={handleGuardar} loading={saving} style={styles.actionBtn} />
       </View>
     </ScreenContainer>
   );

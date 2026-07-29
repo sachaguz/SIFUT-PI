@@ -5,25 +5,48 @@ import Card from '../../components/Card';
 import FormInput from '../../components/FormInput';
 import PillSelector from '../../components/PillSelector';
 import PrimaryButton from '../../components/PrimaryButton';
+import api from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 const METODOS = ['Tarjeta', 'Transferencia'];
+const METODO_ENUM = { Tarjeta: 'TARJETA', Transferencia: 'TRANSFERENCIA' };
 
 export default function UserPagoScreen({ navigation, route }) {
-  const { sede, cancha, fecha, hora, precio } = route.params;
+  const { canchaId, sedeName, canchaName, fecha, fechaLabel, horaInicio, horaFin, precio } = route.params;
   const [metodo, setMetodo] = useState(METODOS[0]);
   const [numeroTarjeta, setNumeroTarjeta] = useState('');
   const [nombreTarjeta, setNombreTarjeta] = useState('');
   const [vencimiento, setVencimiento] = useState('');
   const [cvv, setCvv] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handlePagar = () => {
+  const handlePagar = async () => {
     if (metodo === 'Tarjeta' && (!numeroTarjeta || !nombreTarjeta || !vencimiento || !cvv)) {
       Alert.alert('Faltan datos', 'Completa los datos de la tarjeta.');
       return;
     }
-    const folio = `RSV-${Math.floor(1000 + Math.random() * 9000)}`;
-    navigation.navigate('UserReservaConfirmada', { sede, cancha, fecha, hora, precio, folio });
+    setSaving(true);
+    try {
+      const { data } = await api.post('/reservas', {
+        canchaId,
+        fecha,
+        horaInicio,
+        horaFin,
+        metodoPago: METODO_ENUM[metodo],
+      });
+      navigation.navigate('UserReservaConfirmada', {
+        sedeName,
+        canchaName,
+        fechaLabel,
+        hora: `${horaInicio} - ${horaFin}`,
+        precio,
+        folio: data.folio,
+      });
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'No se pudo completar la reserva.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -32,10 +55,10 @@ export default function UserPagoScreen({ navigation, route }) {
 
       <Card>
         <Text style={typography.subtitle}>
-          {sede} · {cancha}
+          {sedeName} · {canchaName}
         </Text>
         <Text style={styles.meta}>
-          {fecha} · {hora}
+          {fechaLabel} · {horaInicio} - {horaFin}
         </Text>
         <Text style={styles.precio}>${precio} MXN</Text>
       </Card>
@@ -69,7 +92,7 @@ export default function UserPagoScreen({ navigation, route }) {
         </Text>
       )}
 
-      <PrimaryButton title={`Pagar $${precio} MXN`} onPress={handlePagar} style={{ marginTop: spacing.md }} />
+      <PrimaryButton title={saving ? 'Procesando...' : `Pagar $${precio} MXN`} onPress={handlePagar} disabled={saving} style={{ marginTop: spacing.md }} />
     </ScreenContainer>
   );
 }

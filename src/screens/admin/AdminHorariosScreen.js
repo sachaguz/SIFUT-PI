@@ -1,59 +1,51 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import ListRow from '../../components/ListRow';
 import PillSelector from '../../components/PillSelector';
 import Badge from '../../components/Badge';
-import { spacing } from '../../theme/colors';
+import api from '../../services/api';
+import { colors, spacing } from '../../theme/colors';
 
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
-const BLOQUES = {
-  Lun: [
-    { hora: '08:00 - 09:00', cancha: 'Cancha 1', precio: 450, disponible: true },
-    { hora: '15:00 - 16:00', cancha: 'Cancha 1', precio: 500, disponible: false },
-    { hora: '16:00 - 17:00', cancha: 'Cancha 2', precio: 650, disponible: true },
-  ],
-  Mar: [
-    { hora: '09:00 - 10:00', cancha: 'Cancha 1', precio: 450, disponible: true },
-    { hora: '18:00 - 19:00', cancha: 'Cancha 2', precio: 650, disponible: false },
-  ],
-  Mié: [{ hora: '17:00 - 18:00', cancha: 'Cancha 1', precio: 500, disponible: true }],
-  Jue: [{ hora: '19:00 - 20:00', cancha: 'Cancha 2', precio: 650, disponible: true }],
-  Vie: [
-    { hora: '20:00 - 21:00', cancha: 'Cancha 1', precio: 500, disponible: false },
-    { hora: '21:00 - 22:00', cancha: 'Cancha 2', precio: 650, disponible: true },
-  ],
-  Sáb: [
-    { hora: '10:00 - 11:00', cancha: 'Cancha 1', precio: 450, disponible: true },
-    { hora: '11:00 - 12:00', cancha: 'Cancha 2', precio: 650, disponible: true },
-  ],
-  Dom: [{ hora: '12:00 - 13:00', cancha: 'Cancha 1', precio: 450, disponible: true }],
-};
+const DIA_INDEX = { Lun: 1, Mar: 2, Mié: 3, Jue: 4, Vie: 5, Sáb: 6, Dom: 0 };
 
 export default function AdminHorariosScreen({ route }) {
-  const sede = route.params?.sede || 'Sede seleccionada';
+  const { sedeId, sede } = route.params || {};
   const [dia, setDia] = useState('Lun');
+  const [horarios, setHorarios] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const bloques = BLOQUES[dia] || [];
+  useFocusEffect(
+    useCallback(() => {
+      if (!sedeId) return;
+      setLoading(true);
+      api.get(`/horarios/sede/${sedeId}`).then((r) => setHorarios(r.data)).finally(() => setLoading(false));
+    }, [sedeId])
+  );
+
+  const bloques = horarios.filter((h) => h.diaSemana === DIA_INDEX[dia]);
 
   return (
     <ScreenContainer>
-      <SectionHeader title="Horarios" subtitle={sede} />
+      <SectionHeader title="Horarios" subtitle={sede || 'Sede seleccionada'} />
 
       <PillSelector options={DIAS} value={dia} onChange={setDia} />
 
-      {bloques.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : bloques.length === 0 ? (
         <Text style={styles.empty}>No hay bloques configurados este día.</Text>
       ) : (
-        bloques.map((bloque, index) => (
+        bloques.map((bloque) => (
           <ListRow
-            key={`${bloque.hora}-${index}`}
+            key={bloque.id}
             icon="time-outline"
-            title={bloque.hora}
-            subtitle={bloque.cancha}
-            meta={`$${bloque.precio} MXN/hora`}
+            title={`${bloque.horaInicio} - ${bloque.horaFin}`}
+            subtitle={bloque.cancha?.nombre || 'Cancha'}
+            meta={`$${Number(bloque.cancha?.precioPorHora || 0)} MXN/hora`}
             right={
               <Badge label={bloque.disponible ? 'Disponible' : 'Ocupado'} tone={bloque.disponible ? 'success' : 'danger'} />
             }

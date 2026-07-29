@@ -14,6 +14,7 @@ import {
 } from '@expo-google-fonts/manrope';
 import RootNavigator from './src/navigation/RootNavigator';
 import { navigationRef } from './src/navigation/navigationRef';
+import { AuthProvider } from './src/context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -40,10 +41,12 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <SafeAreaProvider>
-        <NavigationContainer ref={navigationRef}>
-          <RootNavigator />
-          <StatusBar style="dark" />
-        </NavigationContainer>
+        <AuthProvider>
+          <NavigationContainer ref={navigationRef}>
+            <RootNavigator />
+            <StatusBar style="dark" />
+          </NavigationContainer>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

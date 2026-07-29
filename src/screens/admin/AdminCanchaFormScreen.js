@@ -4,27 +4,51 @@ import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
 import PillSelector from '../../components/PillSelector';
+import api from '../../services/api';
 import { spacing, typography } from '../../theme/colors';
 
-const TIPOS = ['Fútbol 5', 'Fútbol 7', 'Fútbol 11'];
+const TIPOS_DISPLAY = ['Fútbol 5', 'Fútbol 7', 'Fútbol 11'];
+const TIPO_MAP = { 'Fútbol 5': 'FUTBOL5', 'Fútbol 7': 'FUTBOL7', 'Fútbol 11': 'FUTBOL11' };
+const TIPO_REVERSE = { FUTBOL5: 'Fútbol 5', FUTBOL7: 'Fútbol 7', FUTBOL11: 'Fútbol 11' };
 const SUPERFICIES = ['Pasto sintético', 'Pasto natural'];
 
 export default function AdminCanchaFormScreen({ navigation, route }) {
-  const { cancha, sede } = route.params || {};
+  const { cancha, sedeId, sede } = route.params || {};
   const [nombre, setNombre] = useState(cancha?.nombre || '');
-  const [tipo, setTipo] = useState(cancha?.tipo || TIPOS[1]);
+  const [tipo, setTipo] = useState(cancha ? (TIPO_REVERSE[cancha.tipo] || TIPOS_DISPLAY[1]) : TIPOS_DISPLAY[1]);
   const [superficie, setSuperficie] = useState(cancha?.superficie || SUPERFICIES[0]);
   const [capacidad, setCapacidad] = useState(cancha ? String(cancha.capacidad) : '');
-  const [precioHora, setPrecioHora] = useState(cancha?.precioHora ? String(cancha.precioHora) : '');
+  const [precioHora, setPrecioHora] = useState(cancha?.precioPorHora ? String(Number(cancha.precioPorHora)) : '');
+  const [saving, setSaving] = useState(false);
 
-  const handleGuardar = () => {
+  const handleGuardar = async () => {
     if (!nombre || !capacidad || !precioHora) {
       Alert.alert('Faltan datos', 'Completa el nombre, capacidad y precio por hora.');
       return;
     }
-    Alert.alert('Cancha guardada', `${nombre} se guardó en ${sede}.`, [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    setSaving(true);
+    try {
+      const body = {
+        sedeId: cancha?.sedeId || sedeId,
+        nombre,
+        tipo: TIPO_MAP[tipo],
+        superficie,
+        capacidad: parseInt(capacidad, 10),
+        precioPorHora: precioHora,
+      };
+      if (cancha) {
+        await api.put(`/canchas/${cancha.id}`, body);
+      } else {
+        await api.post('/canchas', body);
+      }
+      Alert.alert('Cancha guardada', `${nombre} se guardó en ${sede}.`, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'No se pudo guardar la cancha.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -34,7 +58,7 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
 
       <FormInput label="Nombre de la cancha" placeholder="Cancha 1" value={nombre} onChangeText={setNombre} />
 
-      <PillSelector label="Tipo de cancha" options={TIPOS} value={tipo} onChange={setTipo} />
+      <PillSelector label="Tipo de cancha" options={TIPOS_DISPLAY} value={tipo} onChange={setTipo} />
       <PillSelector label="Superficie" options={SUPERFICIES} value={superficie} onChange={setSuperficie} />
 
       <View style={styles.rowInputs}>
@@ -58,30 +82,16 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
 
       <View style={styles.actions}>
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
-        <PrimaryButton title="Guardar" onPress={handleGuardar} style={styles.actionBtn} />
+        <PrimaryButton title="Guardar" onPress={handleGuardar} loading={saving} style={styles.actionBtn} />
       </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    ...typography.title,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.body,
-    marginBottom: spacing.lg,
-  },
-  rowInputs: {
-    flexDirection: 'row',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  actionBtn: {
-    flex: 1,
-  },
+  title: { ...typography.title, marginBottom: spacing.xs },
+  subtitle: { ...typography.body, marginBottom: spacing.lg },
+  rowInputs: { flexDirection: 'row' },
+  actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  actionBtn: { flex: 1 },
 });

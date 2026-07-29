@@ -1,42 +1,55 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PillSelector from '../../components/PillSelector';
 import PrimaryButton from '../../components/PrimaryButton';
-import { EQUIPOS } from '../../data/torneos';
+import api from '../../services/api';
 import { colors, fonts, radius, spacing, typography } from '../../theme/colors';
 
 const TIPOS = ['Fútbol 5', 'Fútbol 7', 'Fútbol 11'];
+const CATEGORIAS = ['Libre', 'Sub-18', 'Sub-15', 'Veteranos'];
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export default function OrgTorneoFormScreen({ navigation, route }) {
   const torneo = route.params?.torneo;
   const [nombre, setNombre] = useState(torneo?.nombre || '');
   const [tipo, setTipo] = useState(torneo?.tipo || TIPOS[1]);
-  const [diasJuego, setDiasJuego] = useState(['Sáb', 'Dom']);
-  const [horaInicio, setHoraInicio] = useState('09:00');
-  const [horaFin, setHoraFin] = useState('21:00');
-  const [equiposSeleccionados, setEquiposSeleccionados] = useState(torneo?.equipos || []);
+  const [categoria, setCategoria] = useState(torneo?.categoria || CATEGORIAS[0]);
+  const [diasJuego, setDiasJuego] = useState(torneo?.diasJuego || ['Sáb', 'Dom']);
+  const [fechaInicio, setFechaInicio] = useState(torneo?.fechaInicio ? torneo.fechaInicio.substring(0, 10) : '');
+  const [fechaFin, setFechaFin] = useState(torneo?.fechaFin ? torneo.fechaFin.substring(0, 10) : '');
+  const [saving, setSaving] = useState(false);
 
   const toggleDia = (dia) => {
     setDiasJuego((prev) => (prev.includes(dia) ? prev.filter((d) => d !== dia) : [...prev, dia]));
   };
 
-  const toggleEquipo = (nombreEquipo) => {
-    setEquiposSeleccionados((prev) =>
-      prev.includes(nombreEquipo) ? prev.filter((e) => e !== nombreEquipo) : [...prev, nombreEquipo]
-    );
-  };
-
-  const handleGuardar = () => {
+  const handleGuardar = async () => {
     if (!nombre) {
       Alert.alert('Falta el nombre', 'Ingresa el nombre del torneo.');
       return;
     }
-    Alert.alert('Torneo guardado', `${nombre} se guardó correctamente.`, [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    if (!fechaInicio || !fechaFin) {
+      Alert.alert('Faltan fechas', 'Ingresa las fechas de inicio y fin.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const body = { nombre, tipo, categoria, fechaInicio, fechaFin, diasJuego };
+      if (torneo?.id) {
+        await api.put(`/torneos/${torneo.id}`, body);
+      } else {
+        await api.post('/torneos', body);
+      }
+      Alert.alert('Torneo guardado', `${nombre} se guardó correctamente.`, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || 'No se pudo guardar el torneo.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -46,6 +59,13 @@ export default function OrgTorneoFormScreen({ navigation, route }) {
       <FormInput label="Nombre" placeholder="Nombre del torneo" value={nombre} onChangeText={setNombre} />
 
       <PillSelector label="Tipo" options={TIPOS} value={tipo} onChange={setTipo} />
+
+      <PillSelector label="Categoría" options={CATEGORIAS} value={categoria} onChange={setCategoria} />
+
+      <View style={styles.rowInputs}>
+        <FormInput label="Fecha inicio" placeholder="2026-08-01" value={fechaInicio} onChangeText={setFechaInicio} containerStyle={{ flex: 1, marginRight: spacing.sm }} />
+        <FormInput label="Fecha fin" placeholder="2026-12-15" value={fechaFin} onChangeText={setFechaFin} containerStyle={{ flex: 1 }} />
+      </View>
 
       <Text style={styles.label}>Días de juego</Text>
       <View style={styles.multiRow}>
@@ -59,27 +79,9 @@ export default function OrgTorneoFormScreen({ navigation, route }) {
         })}
       </View>
 
-      <View style={styles.rowInputs}>
-        <FormInput label="Hora inicio" value={horaInicio} onChangeText={setHoraInicio} containerStyle={{ flex: 1, marginRight: spacing.sm }} />
-        <FormInput label="Hora fin" value={horaFin} onChangeText={setHoraFin} containerStyle={{ flex: 1 }} />
-      </View>
-
-      <Text style={styles.label}>Agregar equipos existentes</Text>
-      <ScrollView style={styles.equiposList} nestedScrollEnabled>
-        {EQUIPOS.map((equipo) => {
-          const active = equiposSeleccionados.includes(equipo.nombre);
-          return (
-            <TouchableOpacity key={equipo.id} style={styles.equipoRow} onPress={() => toggleEquipo(equipo.nombre)}>
-              <Text style={styles.equipoText}>{equipo.nombre}</Text>
-              <View style={[styles.checkbox, active && styles.checkboxActive]} />
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
       <View style={styles.actions}>
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
-        <PrimaryButton title="Guardar" onPress={handleGuardar} style={styles.actionBtn} />
+        <PrimaryButton title={saving ? 'Guardando...' : 'Guardar'} onPress={handleGuardar} disabled={saving} style={styles.actionBtn} />
       </View>
     </ScreenContainer>
   );
@@ -123,36 +125,6 @@ const styles = StyleSheet.create({
   },
   rowInputs: {
     flexDirection: 'row',
-  },
-  equiposList: {
-    maxHeight: 180,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    marginBottom: spacing.lg,
-  },
-  equipoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  equipoText: {
-    ...typography.body,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  checkboxActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   actions: {
     flexDirection: 'row',

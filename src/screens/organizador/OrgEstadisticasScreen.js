@@ -1,18 +1,38 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import PillSelector from '../../components/PillSelector';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
-import { GOLEO_INDIVIDUAL, REPORTES_DISCIPLINARIOS } from '../../data/torneos';
+import api from '../../services/api';
 import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 const VISTAS = ['Goleo individual', 'Reportes disciplinarios'];
 
 export default function OrgEstadisticasScreen() {
   const [vista, setVista] = useState(VISTAS[0]);
+  const [goleo, setGoleo] = useState([]);
+  const [disciplina, setDisciplina] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([
+        api.get('/estadisticas/goleo'),
+        api.get('/estadisticas/disciplina'),
+      ]).then(([g, d]) => {
+        setGoleo(g.data);
+        setDisciplina(d.data);
+      }).finally(() => setLoading(false));
+    }, [])
+  );
+
+  if (loading) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer>
@@ -22,8 +42,8 @@ export default function OrgEstadisticasScreen() {
 
       {vista === 'Goleo individual' ? (
         <Card>
-          {GOLEO_INDIVIDUAL.map((item, index) => (
-            <View key={item.jugador} style={styles.row}>
+          {goleo.map((item, index) => (
+            <View key={`${item.jugador}-${index}`} style={styles.row}>
               <Text style={styles.rank}>{index + 1}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={typography.body}>{item.jugador}</Text>
@@ -35,8 +55,8 @@ export default function OrgEstadisticasScreen() {
         </Card>
       ) : (
         <Card>
-          {REPORTES_DISCIPLINARIOS.map((item) => (
-            <View key={item.jugador} style={styles.rowDisciplinario}>
+          {disciplina.map((item, index) => (
+            <View key={`${item.jugador}-${index}`} style={styles.rowDisciplinario}>
               <View style={{ flex: 1 }}>
                 <Text style={typography.body}>{item.jugador}</Text>
                 <Text style={styles.equipo}>{item.equipo}</Text>
@@ -58,37 +78,10 @@ export default function OrgEstadisticasScreen() {
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  rowDisciplinario: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    gap: spacing.md,
-  },
-  rank: {
-    ...typography.displaySmall,
-    fontSize: 18,
-    width: 28,
-  },
-  equipo: {
-    ...typography.caption,
-  },
-  tarjeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    width: 40,
-  },
-  tarjetaCount: {
-    ...typography.body,
-    fontFamily: fonts.semiBold,
-  },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  rowDisciplinario: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.md },
+  rank: { ...typography.displaySmall, fontSize: 18, width: 28 },
+  equipo: { ...typography.caption },
+  tarjeta: { flexDirection: 'row', alignItems: 'center', gap: 4, width: 40 },
+  tarjetaCount: { ...typography.body, fontFamily: fonts.semiBold },
 });

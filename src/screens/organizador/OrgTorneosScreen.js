@@ -1,15 +1,27 @@
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
 import PrimaryButton from '../../components/PrimaryButton';
-import { TORNEOS } from '../../data/torneos';
-import { spacing } from '../../theme/colors';
+import api, { formatDate, estadoLabel } from '../../services/api';
+import { colors, spacing } from '../../theme/colors';
 
 export default function OrgTorneosScreen({ navigation }) {
-  const [torneos] = useState(TORNEOS);
+  const [torneos, setTorneos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      api.get('/torneos').then((r) => setTorneos(r.data)).finally(() => setLoading(false));
+    }, [])
+  );
+
+  if (loading) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer>
@@ -21,9 +33,9 @@ export default function OrgTorneosScreen({ navigation }) {
           icon="trophy-outline"
           title={torneo.nombre}
           subtitle={`${torneo.tipo} · ${torneo.categoria}`}
-          meta={`${torneo.fechaInicio} - ${torneo.fechaFin} · ${torneo.equipos.length} equipos`}
-          right={<Badge label={torneo.estado} tone={torneo.estado === 'Activo' ? 'success' : 'neutral'} />}
-          onPress={() => navigation.navigate('OrgTorneoDetalle', { torneo })}
+          meta={`${formatDate(torneo.fechaInicio)} - ${formatDate(torneo.fechaFin)} · ${torneo.equipos?.length || 0} equipos`}
+          right={<Badge label={estadoLabel(torneo.estado)} tone={torneo.estado === 'ACTIVO' ? 'success' : 'neutral'} />}
+          onPress={() => navigation.navigate('OrgTorneoDetalle', { torneoId: torneo.id })}
         />
       ))}
 

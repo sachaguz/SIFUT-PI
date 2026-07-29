@@ -1,20 +1,43 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
-import PrimaryButton from '../../components/PrimaryButton';
+import api from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 const EVENTO_MARCA = {
-  Gol: { icon: 'football', color: colors.primary, label: 'Gol' },
-  Autogol: { icon: 'football', color: colors.textMuted, label: 'Autogol' },
-  'Tarjeta roja': { icon: 'card', color: colors.danger, label: 'Roja' },
-  'Tarjeta amarilla': { icon: 'card', color: colors.warning, label: 'Amarilla' },
-  Cambio: { icon: 'swap-horizontal', color: colors.secondary, label: 'Cambio' },
+  GOL: { icon: 'football', color: colors.primary, label: 'Gol' },
+  AUTOGOL: { icon: 'football', color: colors.textMuted, label: 'Autogol' },
+  TARJETA_ROJA: { icon: 'card', color: colors.danger, label: 'Roja' },
+  TARJETA_AMARILLA: { icon: 'card', color: colors.warning, label: 'Amarilla' },
+  SUSTITUCION: { icon: 'swap-horizontal', color: colors.secondary, label: 'Cambio' },
 };
 
 export default function PartidoDetalleScreen({ route }) {
-  const { partido } = route.params;
+  const { partido: partidoParam } = route.params;
+  const [partido, setPartido] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      api.get(`/partidos/${partidoParam.id}`)
+        .then((r) => setPartido(r.data))
+        .finally(() => setLoading(false));
+    }, [partidoParam.id])
+  );
+
+  if (loading || !partido) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
+
+  const local = partido.equipoLocal?.nombre || '';
+  const visitante = partido.equipoVisitante?.nombre || '';
+  const torneo = partido.torneo?.nombre || '';
+  const cancha = partido.cancha
+    ? `${partido.cancha.nombre} - ${partido.cancha.sede?.nombre || ''}`
+    : '';
   const eventos = partido.eventos || [];
   const stats = partido.estadisticas;
 
@@ -22,14 +45,14 @@ export default function PartidoDetalleScreen({ route }) {
     <ScreenContainer>
       <Card style={styles.scoreCard}>
         <View style={styles.scoreRow}>
-          <Text style={styles.equipo}>{partido.local}</Text>
+          <Text style={styles.equipo}>{local}</Text>
           <Text style={styles.score}>
             {partido.golesLocal ?? 0} - {partido.golesVisitante ?? 0}
           </Text>
-          <Text style={styles.equipo}>{partido.visitante}</Text>
+          <Text style={styles.equipo}>{visitante}</Text>
         </View>
         <Text style={styles.meta}>
-          {partido.torneo} · {partido.cancha}
+          {torneo} · {cancha}
         </Text>
       </Card>
 
@@ -40,8 +63,10 @@ export default function PartidoDetalleScreen({ route }) {
         ) : (
           eventos.map((evento, index) => {
             const marca = EVENTO_MARCA[evento.tipo];
+            const jugadorNombre = evento.jugador?.nombre || '';
+            const equipoNombre = evento.jugador?.equipo?.nombre || '';
             return (
-              <View key={index} style={styles.eventoRow}>
+              <View key={evento.id || index} style={styles.eventoRow}>
                 <Text style={styles.eventoMinuto}>{evento.minuto}'</Text>
                 <Ionicons
                   name={marca?.icon || 'ellipse'}
@@ -50,7 +75,7 @@ export default function PartidoDetalleScreen({ route }) {
                   style={styles.eventoIcon}
                 />
                 <Text style={styles.eventoTexto}>
-                  {marca?.label || evento.tipo} · {evento.jugador} ({evento.equipo})
+                  {marca?.label || evento.tipo} · {jugadorNombre} ({equipoNombre})
                 </Text>
               </View>
             );
@@ -62,10 +87,10 @@ export default function PartidoDetalleScreen({ route }) {
         <>
           <Text style={[typography.subtitle, { marginTop: spacing.md }]}>Estadísticas</Text>
           <Card style={{ marginTop: spacing.sm }}>
-            <StatRow label="Posesión" values={stats.posesion} suffix="%" />
-            <StatRow label="Tiros al arco" values={stats.tirosAlArco} />
-            <StatRow label="Pases efectivos" values={stats.pasesEfectivos} suffix="%" />
-            <StatRow label="Faltas" values={stats.faltas} />
+            {stats.posesion && <StatRow label="Posesión" values={stats.posesion} suffix="%" />}
+            {stats.tirosAlArco && <StatRow label="Tiros al arco" values={stats.tirosAlArco} />}
+            {stats.pasesEfectivos && <StatRow label="Pases efectivos" values={stats.pasesEfectivos} suffix="%" />}
+            {stats.faltas && <StatRow label="Faltas" values={stats.faltas} />}
           </Card>
         </>
       ) : null}

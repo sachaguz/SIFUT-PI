@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import { useAuth } from '../../context/AuthContext';
 import { colors, spacing, typography } from '../../theme/colors';
 
 export default function RegisterScreen({ navigation }) {
@@ -16,12 +17,18 @@ export default function RegisterScreen({ navigation }) {
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
 
   const update = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.nombres || !form.correo || !form.password) {
       Alert.alert('Faltan datos', 'Completa todos los campos requeridos.');
+      return;
+    }
+    if (form.password.length < 8) {
+      Alert.alert('Contraseña muy corta', 'La contraseña debe tener al menos 8 caracteres.');
       return;
     }
     if (form.password !== form.repitePassword) {
@@ -32,9 +39,23 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert('Falta aceptar', 'Debes aceptar los términos y la política de privacidad.');
       return;
     }
-    Alert.alert('¡Cuenta creada con éxito!', 'Ya puedes iniciar sesión.', [
-      { text: 'Ingresar', onPress: () => navigation.replace('Login') },
-    ]);
+    setLoading(true);
+    try {
+      await register({
+        nombre: form.nombres,
+        apellido: form.apellidoPaterno,
+        email: form.correo,
+        password: form.password,
+      });
+      Alert.alert('¡Cuenta creada con éxito!', 'Ya puedes iniciar sesión.', [
+        { text: 'Ingresar', onPress: () => navigation.replace('Login') },
+      ]);
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Error al crear la cuenta.';
+      Alert.alert('Error', msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,7 +84,7 @@ export default function RegisterScreen({ navigation }) {
       />
       <FormInput
         label="Contraseña"
-        placeholder="8 dígitos"
+        placeholder="Mínimo 8 caracteres"
         secureTextEntry
         value={form.password}
         onChangeText={update('password')}
@@ -85,7 +106,7 @@ export default function RegisterScreen({ navigation }) {
         <Text style={styles.checkboxLabel}>Acepto política de privacidad</Text>
       </TouchableOpacity>
 
-      <PrimaryButton title="Crear cuenta" onPress={handleSubmit} style={{ marginTop: spacing.lg }} />
+      <PrimaryButton title="Crear cuenta" onPress={handleSubmit} loading={loading} style={{ marginTop: spacing.lg }} />
     </ScreenContainer>
   );
 }

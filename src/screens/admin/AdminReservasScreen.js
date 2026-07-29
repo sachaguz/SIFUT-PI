@@ -1,35 +1,52 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
-
-const RESERVAS_HOY = [
-  { id: '1', sede: 'Sede Centro Histórico', cancha: 'Cancha 1', hora: '15:00 - 16:00', usuario: 'Juan Pérez', estado: 'Ocupada' },
-  { id: '2', sede: 'Sede Centro Histórico', cancha: 'Cancha 2', hora: '16:00 - 17:00', usuario: '—', estado: 'Libre' },
-  { id: '3', sede: 'Sede Juriquilla', cancha: 'Cancha 1', hora: '18:00 - 19:00', usuario: 'Equipo Halcones', estado: 'Ocupada' },
-  { id: '4', sede: 'Sede El Marqués', cancha: 'Cancha 1', hora: '20:00 - 21:00', usuario: '—', estado: 'Libre' },
-];
-
-const TONE_BY_ESTADO = { Ocupada: 'warning', Libre: 'success' };
+import api, { estadoLabel } from '../../services/api';
+import { colors } from '../../theme/colors';
 
 export default function AdminReservasScreen() {
-  const [reservas] = useState(RESERVAS_HOY);
+  const [reservas, setReservas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      const hoy = new Date().toISOString().slice(0, 10);
+      api.get(`/reservas?fecha=${hoy}`).then((r) => setReservas(r.data)).finally(() => setLoading(false));
+    }, [])
+  );
+
+  if (loading) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
 
   return (
     <ScreenContainer>
       <SectionHeader title="Ocupación de hoy" subtitle="Tablero de canchas reservadas en el día en curso" />
 
-      {reservas.map((item) => (
-        <ListRow
-          key={item.id}
-          icon="calendar-outline"
-          title={`${item.sede} · ${item.cancha}`}
-          subtitle={item.hora}
-          meta={item.usuario !== '—' ? `Reservó: ${item.usuario}` : 'Sin reservación'}
-          right={<Badge label={item.estado} tone={TONE_BY_ESTADO[item.estado]} />}
-        />
-      ))}
+      {reservas.length === 0 ? (
+        <SectionHeader subtitle="No hay reservaciones para hoy." />
+      ) : (
+        reservas.map((item) => {
+          const sedeName = item.cancha?.sede?.nombre || '';
+          const canchaName = item.cancha?.nombre || '';
+          const userName = item.user ? `${item.user.nombre} ${item.user.apellido}` : '—';
+          const ocupada = item.estado !== 'CANCELADA';
+          return (
+            <ListRow
+              key={item.id}
+              icon="calendar-outline"
+              title={`${sedeName} · ${canchaName}`}
+              subtitle={`${item.horaInicio} - ${item.horaFin}`}
+              meta={ocupada ? `Reservó: ${userName}` : 'Cancelada'}
+              right={<Badge label={ocupada ? 'Ocupada' : 'Libre'} tone={ocupada ? 'warning' : 'success'} />}
+            />
+          );
+        })
+      )}
     </ScreenContainer>
   );
 }

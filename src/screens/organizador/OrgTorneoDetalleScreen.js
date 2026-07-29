@@ -1,14 +1,36 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import ListRow from '../../components/ListRow';
-import { PARTIDOS } from '../../data/partidos';
+import api, { formatDate } from '../../services/api';
 import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 export default function OrgTorneoDetalleScreen({ navigation, route }) {
-  const { torneo } = route.params;
-  const proximosPartidos = PARTIDOS.filter((p) => p.torneo === torneo.nombre && p.estado === 'Pendiente');
+  const { torneoId } = route.params;
+  const [torneo, setTorneo] = useState(null);
+  const [tabla, setTabla] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([
+        api.get(`/torneos/${torneoId}`),
+        api.get(`/torneos/${torneoId}/tabla`),
+      ]).then(([t, tb]) => {
+        setTorneo(t.data);
+        setTabla(tb.data);
+      }).finally(() => setLoading(false));
+    }, [torneoId])
+  );
+
+  if (loading || !torneo) {
+    return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
+  }
+
+  const proximosPartidos = (torneo.partidos || []).filter((p) => p.estado === 'PENDIENTE');
 
   return (
     <ScreenContainer>
@@ -26,7 +48,7 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
           <Text style={styles.th}>DG</Text>
           <Text style={styles.th}>Pts</Text>
         </View>
-        {torneo.tabla.map((fila) => (
+        {tabla.map((fila) => (
           <View key={fila.pos} style={styles.tableRow}>
             <Text style={[styles.td, { flex: 0.4 }]}>{fila.pos}</Text>
             <Text style={[styles.td, { flex: 2, textAlign: 'left' }]}>{fila.equipo}</Text>
@@ -46,9 +68,9 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
             <ListRow
               key={partido.id}
               icon="football-outline"
-              title={`${partido.local} vs ${partido.visitante}`}
-              subtitle={`${partido.fecha} · ${partido.hora}`}
-              meta={partido.cancha}
+              title={`${partido.equipoLocal?.nombre || ''} vs ${partido.equipoVisitante?.nombre || ''}`}
+              subtitle={`${formatDate(partido.fecha)} · ${partido.hora}`}
+              meta={partido.cancha?.nombre || ''}
             />
           ))
         )}
@@ -63,7 +85,7 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
         />
         <PrimaryButton
           title="Programar partido"
-          onPress={() => navigation.navigate('OrgPartidoForm', { torneo })}
+          onPress={() => navigation.navigate('OrgPartidoForm', { torneoId: torneo.id })}
           style={styles.actionBtn}
         />
       </View>
