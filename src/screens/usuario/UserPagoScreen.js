@@ -11,6 +11,17 @@ import { colors, spacing, typography } from '../../theme/colors';
 const METODOS = ['Tarjeta', 'Transferencia'];
 const METODO_ENUM = { Tarjeta: 'TARJETA', Transferencia: 'TRANSFERENCIA' };
 
+function formatNumeroTarjeta(text) {
+  const digits = text.replace(/\D/g, '').slice(0, 16);
+  return digits.match(/.{1,4}/g)?.join('-') || digits;
+}
+
+function formatVencimiento(text) {
+  const digits = text.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
 export default function UserPagoScreen({ navigation, route }) {
   const { canchaId, sedeName, canchaName, fecha, fechaLabel, horaInicio, horaFin, precio } = route.params;
   const [metodo, setMetodo] = useState(METODOS[0]);
@@ -69,21 +80,32 @@ export default function UserPagoScreen({ navigation, route }) {
         <>
           <FormInput
             label="Número de tarjeta"
-            placeholder="0000 0000 0000 0000"
+            placeholder="0000-0000-0000-0000"
             keyboardType="numeric"
+            maxLength={19}
             value={numeroTarjeta}
-            onChangeText={setNumeroTarjeta}
+            onChangeText={(text) => setNumeroTarjeta(formatNumeroTarjeta(text))}
           />
           <FormInput label="Nombre en la tarjeta" placeholder="Nombre completo" value={nombreTarjeta} onChangeText={setNombreTarjeta} />
           <View style={styles.row}>
             <FormInput
               label="Vencimiento"
               placeholder="MM/AA"
+              keyboardType="numeric"
+              maxLength={5}
               value={vencimiento}
-              onChangeText={setVencimiento}
+              onChangeText={(text) => setVencimiento(formatVencimiento(text))}
               containerStyle={{ flex: 1, marginRight: spacing.sm }}
             />
-            <FormInput label="CVV" placeholder="123" keyboardType="numeric" value={cvv} onChangeText={setCvv} containerStyle={{ flex: 1 }} />
+            <FormInput
+              label="CVV"
+              placeholder="123"
+              keyboardType="numeric"
+              maxLength={4}
+              value={cvv}
+              onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 4))}
+              containerStyle={{ flex: 1 }}
+            />
           </View>
         </>
       ) : (

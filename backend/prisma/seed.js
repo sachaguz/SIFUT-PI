@@ -3,6 +3,37 @@ const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
+const LIGA_MX_EQUIPOS = [
+  'Club América', 'Guadalajara', 'Cruz Azul', 'Pumas UNAM', 'Toluca', 'Monterrey',
+  'Tigres UANL', 'Santos Laguna', 'León', 'Pachuca', 'Necaxa', 'Atlas',
+  'Puebla', 'Querétaro', 'Mazatlán FC', 'FC Juárez', 'Atlético San Luis', 'Xolos de Tijuana',
+];
+
+const POSICIONES_PLANTILLA = [
+  'PORTERO',
+  'DEFENSA', 'DEFENSA', 'DEFENSA', 'DEFENSA',
+  'MEDIOCAMPISTA', 'MEDIOCAMPISTA', 'MEDIOCAMPISTA', 'MEDIOCAMPISTA',
+  'DELANTERO', 'DELANTERO',
+];
+
+const NOMBRES = [
+  'Carlos', 'Luis', 'Jorge', 'Miguel', 'José', 'Fernando', 'Alejandro', 'Diego', 'Ricardo', 'Roberto',
+  'Eduardo', 'Francisco', 'Javier', 'Manuel', 'Antonio', 'Raúl', 'Sergio', 'Rafael', 'Iván', 'Óscar',
+  'Adrián', 'Emilio', 'Gustavo', 'Héctor', 'Julio', 'Mario', 'Pablo', 'Rodrigo', 'Salvador', 'Vicente',
+];
+
+const APELLIDOS = [
+  'Hernández', 'García', 'Martínez', 'López', 'González', 'Rodríguez', 'Pérez', 'Sánchez', 'Ramírez', 'Torres',
+  'Flores', 'Rivera', 'Gómez', 'Díaz', 'Cruz', 'Morales', 'Reyes', 'Jiménez', 'Ortiz', 'Gutiérrez',
+  'Chávez', 'Ramos', 'Vargas', 'Castillo', 'Romero', 'Álvarez', 'Mendoza', 'Aguilar', 'Medina', 'Vázquez',
+];
+
+function generarNombreJugador(seed) {
+  const nombre = NOMBRES[seed % NOMBRES.length];
+  const apellido = APELLIDOS[(seed * 7 + 3) % APELLIDOS.length];
+  return `${nombre} ${apellido}`;
+}
+
 async function main() {
   const existing = await prisma.user.findUnique({ where: { email: 'admin@sifut.com' } });
   if (existing) {
@@ -71,6 +102,40 @@ async function main() {
         });
       }
     }
+  }
+
+  // --- Liga MX (torneo + equipos + plantillas de 11 jugadores) ---
+  const ligaMX = await prisma.torneo.create({
+    data: {
+      nombre: 'Liga MX',
+      tipo: 'Fútbol 11',
+      categoria: 'Profesional',
+      fechaInicio: new Date('2026-01-10'),
+      fechaFin: new Date('2026-05-24'),
+      diasJuego: ['Sáb', 'Dom'],
+      estado: 'ACTIVO',
+    },
+  });
+
+  let seed = 0;
+  for (const nombreEquipo of LIGA_MX_EQUIPOS) {
+    const equipo = await prisma.equipo.create({
+      data: {
+        nombre: nombreEquipo,
+        categoria: 'Profesional',
+        torneos: { connect: { id: ligaMX.id } },
+      },
+    });
+
+    const jugadores = POSICIONES_PLANTILLA.map((posicion, i) => ({
+      nombre: generarNombreJugador(seed + i),
+      numeroCamiseta: i + 1,
+      posicion,
+      equipoId: equipo.id,
+    }));
+    seed += POSICIONES_PLANTILLA.length;
+
+    await prisma.jugador.createMany({ data: jugadores });
   }
 
   console.log('Seed completed successfully!');

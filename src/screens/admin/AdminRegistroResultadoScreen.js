@@ -153,7 +153,7 @@ export default function AdminRegistroResultadoScreen({ navigation, route }) {
 
       <Card style={styles.scoreCard}>
         <Text style={styles.scoreText}>
-          {golesLocal} - {golesVisitante}
+          {partido.local} {golesLocal}-{golesVisitante} {partido.visitante}
         </Text>
         <Text style={styles.scoreCaption}>Marcador provisional</Text>
       </Card>
@@ -213,8 +213,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreText: {
-    ...typography.display,
-    fontSize: 40,
+    ...typography.displaySmall,
+    textAlign: 'center',
   },
   scoreCaption: {
     ...typography.caption,

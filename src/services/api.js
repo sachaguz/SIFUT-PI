@@ -22,11 +22,14 @@ function processQueue(error, token) {
   failedQueue = [];
 }
 
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh'];
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    const isAuthEndpoint = AUTH_ENDPOINTS.some((path) => originalRequest?.url?.includes(path));
+    if (error.response?.status !== 401 || originalRequest._retry || isAuthEndpoint) {
       return Promise.reject(error);
     }
 
