@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ORGANIZADOR
+  USUARIO
+}
+
+enum TipoCancha {
+  FUTBOL5
+  FUTBOL7
+  FUTBOL11
+}
+
+enum EstadoReserva {
+  CONFIRMADA
+  COMPLETADA
+  CANCELADA
+}
+
+enum MetodoPago {
+  TARJETA
+  TRANSFERENCIA
+  EFECTIVO
+}
+
+enum EstadoTorneo {
+  ACTIVO
+  FINALIZADO
+  PROXIMO
+}
+
+enum Posicion {
+  PORTERO
+  DEFENSA
+  MEDIOCAMPISTA
+  DELANTERO
+}
+
+enum EstadoPartido {
+  PENDIENTE
+  EN_CURSO
+  FINALIZADO
+}
+
+enum TipoEvento {
+  GOL
+  AUTOGOL
+  TARJETA_AMARILLA
+  TARJETA_ROJA
+  SUSTITUCION
+}
+
+enum EstadoPago {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+model User {
+  id        String   @id @default(uuid())
+  nombre    String
+  apellido  String
+  email     String   @unique
+  password  String
+  role      Role     @default(USUARIO)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reservas  Reserva[]
+}
+
+model Sede {
+  id        String   @id @default(uuid())
+  nombre    String
+  direccion String
+  telefono  String
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  canchas   Cancha[]
+}
+
+model Cancha {
+  id            String     @id @default(uuid())
+  sedeId        String
+  sede          Sede       @relation(fields: [sedeId], references: [id], onDelete: Cascade)
+  nombre        String
+  tipo          TipoCancha
+  superficie    String
+  capacidad     Int
+  precioPorHora Decimal    @db.Decimal(10, 2)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  horarios      Horario[]
+  reservas      Reserva[]
+  partidos      Partido[]
+}
+
+model Horario {
+  id         String  @id @default(uuid())
+  canchaId   String
+  cancha     Cancha  @relation(fields: [canchaId], references: [id], onDelete: Cascade)
+  diaSemana  Int
+  horaInicio String
+  horaFin    String
+  disponible Boolean @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Reserva {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  canchaId    String
+  cancha      Cancha        @relation(fields: [canchaId], references: [id])
+  fecha       DateTime
+  horaInicio  String
+  horaFin     String
+  estado      EstadoReserva @default(CONFIRMADA)
+  folio       String        @unique
+  totalPagado Decimal       @db.Decimal(10, 2)
+  metodoPago  MetodoPago
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  pago        Pago?
+}
+
+model Torneo {
+  id          String       @id @default(uuid())
+  nombre      String
+  tipo        String
+  categoria   String
+  fechaInicio DateTime
+  fechaFin    DateTime
+  diasJuego   Json
+  estado      EstadoTorneo @default(ACTIVO)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  equipos     Equipo[]
+  partidos    Partido[]
+}
+
+model Equipo {
+  id                String    @id @default(uuid())
+  nombre            String
+  categoria         String
+  torneoId          String
+  torneo            Torneo    @relation(fields: [torneoId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  jugadores         Jugador[]
+  partidosLocal     Partido[] @relation("EquipoLocal")
+  partidosVisitante Partido[] @relation("EquipoVisitante")
+}
+
+model Jugador {
+  id             String          @id @default(uuid())
+  nombre         String
+  numeroCamiseta Int
+  posicion       Posicion
+  equipoId       String
+  equipo         Equipo          @relation(fields: [equipoId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  eventos        EventoPartido[]
+}
+
+model Partido {
+  id                String        @id @default(uuid())
+  torneoId          String
+  torneo            Torneo        @relation(fields: [torneoId], references: [id])
+  equipoLocalId     String
+  equipoLocal       Equipo        @relation("EquipoLocal", fields: [equipoLocalId], references: [id])
+  equipoVisitanteId String
+  equipoVisitante   Equipo        @relation("EquipoVisitante", fields: [equipoVisitanteId], references: [id])
+  canchaId          String?
+  cancha            Cancha?       @relation(fields: [canchaId], references: [id])
+  fecha             DateTime
+  hora              String
+  jornada           Int
+  estado            EstadoPartido @default(PENDIENTE)
+  golesLocal        Int           @default(0)
+  golesVisitante    Int           @default(0)
+  estadisticas      Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  eventos           EventoPartido[]
+}
+
+model EventoPartido {
+  id        String     @id @default(uuid())
+  partidoId String
+  partido   Partido    @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  tipo      TipoEvento
+  jugadorId String
+  jugador   Jugador    @relation(fields: [jugadorId], references: [id])
+  minuto    Int
+  createdAt DateTime   @default(now())
+}
+
+model Pago {
+  id        String     @id @default(uuid())
+  reservaId String     @unique
+  reserva   Reserva    @relation(fields: [reservaId], references: [id])
+  monto     Decimal    @db.Decimal(10, 2)
+  metodo    MetodoPago
+  fecha     DateTime   @default(now())
+  folio     String     @unique
+  concepto  String
+  estado    EstadoPago @default(PENDIENTE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}

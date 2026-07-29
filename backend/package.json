@@ -1,0 +1,33 @@
+{
+  "name": "sifut-backend",
+  "version": "1.0.0",
+  "description": "Backend API for SIFut - Soccer Field Management System",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "dev:private": "nodemon src/server-private.js",
+    "start": "node src/server.js",
+    "start:private": "node src/server-private.js",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "npx prisma migrate reset --force",
+    "db:studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "prom-client": "^15.1.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.9.0",
+    "nodemon": "^3.1.9"
+  }
+}
