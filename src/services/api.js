@@ -1,8 +1,8 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// Cambiar esta URL al IP/dominio de tu servidor en produccion
-const API_URL = 'http://localhost:3000/api';
+// IP local de la laptop en la red del celular (cambia esto si cambias de red/hotspot)
+const API_URL = 'http://172.20.10.2:3000/api';
 
 const api = axios.create({ baseURL: API_URL, timeout: 15000 });
 
