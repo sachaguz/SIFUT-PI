@@ -10,5 +10,7 @@ router.get('/:id', authenticate, v.uuid, ctrl.getById);
 router.post('/', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.equipo, ctrl.create);
 router.put('/:id', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, ctrl.update);
 router.delete('/:id', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, ctrl.remove);
+router.post('/:id/torneos', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, v.asignarTorneo, ctrl.asignarTorneo);
+router.delete('/:id/torneos/:torneoId', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, ctrl.quitarTorneo);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
@@ -40,7 +41,19 @@ export default function OrgPartidosScreen({ navigation }) {
             title={`${local} vs ${visitante}`}
             subtitle={`${torneo} · Jornada ${partido.jornada}${partido.fase === 'LIGUILLA' ? ' (Liguilla)' : ''}`}
             meta={`${formatDate(partido.fecha)} · ${partido.hora} · ${cancha}`}
-            right={<Badge label={estadoLabel(partido.estado)} tone={isFinalizado ? 'success' : 'warning'} />}
+            right={(
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Badge label={estadoLabel(partido.estado)} tone={isFinalizado ? 'success' : 'warning'} />
+                <TouchableOpacity
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => navigation.navigate('OrgPartidoForm', {
+                    partido: { ...partido, fecha: partido.fecha },
+                  })}
+                >
+                  <Ionicons name="create-outline" size={20} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+            )}
             onPress={() => isFinalizado
               ? navigation.navigate('PartidoDetalle', {
                   partido: { ...partido, local, visitante, torneo, cancha, fecha: formatDate(partido.fecha) },

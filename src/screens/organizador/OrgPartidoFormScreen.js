@@ -9,19 +9,22 @@ import api from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 export default function OrgPartidoFormScreen({ navigation, route }) {
-  const preselectedTorneoId = route.params?.torneoId;
+  const partido = route.params?.partido;
+  const isEdit = !!partido?.id;
+  const preselectedTorneoId = route.params?.torneoId || partido?.torneoId;
   const [torneos, setTorneos] = useState([]);
   const [canchas, setCanchas] = useState([]);
   const [torneoId, setTorneoId] = useState(preselectedTorneoId || '');
   const [equipos, setEquipos] = useState([]);
-  const [equipoLocalId, setEquipoLocalId] = useState('');
-  const [equipoVisitanteId, setEquipoVisitanteId] = useState('');
-  const [fecha, setFecha] = useState('');
-  const [hora, setHora] = useState('17:00');
-  const [jornada, setJornada] = useState('');
-  const [canchaId, setCanchaId] = useState('');
+  const [equipoLocalId, setEquipoLocalId] = useState(partido?.equipoLocalId || '');
+  const [equipoVisitanteId, setEquipoVisitanteId] = useState(partido?.equipoVisitanteId || '');
+  const [fecha, setFecha] = useState(partido?.fecha ? partido.fecha.substring(0, 10) : '');
+  const [hora, setHora] = useState(partido?.hora || '17:00');
+  const [jornada, setJornada] = useState(partido?.jornada ? String(partido.jornada) : '');
+  const [canchaId, setCanchaId] = useState(partido?.canchaId || '');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [equiposLoaded, setEquiposLoaded] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -32,7 +35,7 @@ export default function OrgPartidoFormScreen({ navigation, route }) {
         setTorneos(t.data);
         setCanchas(c.data);
         if (!preselectedTorneoId && t.data.length > 0) setTorneoId(t.data[0].id);
-        if (c.data.length > 0) setCanchaId(c.data[0].id);
+        if (!isEdit && c.data.length > 0) setCanchaId(c.data[0].id);
       }).finally(() => setLoading(false));
     }, [])
   );
@@ -41,8 +44,11 @@ export default function OrgPartidoFormScreen({ navigation, route }) {
     if (torneoId) {
       api.get(`/equipos?torneoId=${torneoId}`).then((r) => {
         setEquipos(r.data);
-        if (r.data.length > 0) setEquipoLocalId(r.data[0].id);
-        if (r.data.length > 1) setEquipoVisitanteId(r.data[1].id);
+        if (!isEdit || !equiposLoaded) {
+          if (!equipoLocalId && r.data.length > 0) setEquipoLocalId(r.data[0].id);
+          if (!equipoVisitanteId && r.data.length > 1) setEquipoVisitanteId(r.data[1].id);
+        }
+        setEquiposLoaded(true);
       });
     }
   }, [torneoId]);
@@ -67,14 +73,18 @@ export default function OrgPartidoFormScreen({ navigation, route }) {
         jornada: parseInt(jornada, 10),
         canchaId: canchaId || undefined,
       };
-      await api.post('/partidos', body);
+      if (isEdit) {
+        await api.put(`/partidos/${partido.id}`, body);
+      } else {
+        await api.post('/partidos', body);
+      }
       const local = equipos.find((e) => e.id === equipoLocalId)?.nombre || '';
       const visitante = equipos.find((e) => e.id === equipoVisitanteId)?.nombre || '';
-      Alert.alert('Partido programado', `${local} vs ${visitante}`, [
+      Alert.alert(isEdit ? 'Partido actualizado' : 'Partido programado', `${local} vs ${visitante}`, [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || 'No se pudo programar el partido.');
+      Alert.alert('Error', err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || 'No se pudo guardar el partido.');
     } finally {
       setSaving(false);
     }
@@ -91,7 +101,7 @@ export default function OrgPartidoFormScreen({ navigation, route }) {
 
   return (
     <ScreenContainer>
-      <Text style={styles.title}>Nuevo partido</Text>
+      <Text style={styles.title}>{isEdit ? 'Editar partido' : 'Nuevo partido'}</Text>
 
       <PillSelector
         label="Torneo"

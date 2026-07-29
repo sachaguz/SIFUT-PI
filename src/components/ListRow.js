@@ -3,11 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import Card from './Card';
 import { colors, spacing, typography } from '../theme/colors';
 
-export default function ListRow({ title, subtitle, meta, right, onPress, icon }) {
-  const Wrapper = onPress ? TouchableOpacity : View;
+export default function ListRow({ title, subtitle, meta, right, onPress, onLongPress, icon }) {
+  const Wrapper = onPress || onLongPress ? TouchableOpacity : View;
 
   return (
-    <Wrapper activeOpacity={0.7} onPress={onPress}>
+    <Wrapper activeOpacity={0.7} onPress={onPress} onLongPress={onLongPress}>
       <Card style={styles.card}>
         <View style={styles.row}>
           {icon ? (

@@ -32,7 +32,10 @@ async function getById(req, res, next) {
         equipoVisitante: { select: { id: true, nombre: true } },
         cancha: { include: { sede: { select: { nombre: true } } } },
         eventos: {
-          include: { jugador: { select: { id: true, nombre: true, equipo: { select: { id: true, nombre: true } } } } },
+          include: {
+            jugador: { select: { id: true, nombre: true, equipo: { select: { id: true, nombre: true } } } },
+            jugadorEntra: { select: { id: true, nombre: true } },
+          },
           orderBy: { minuto: 'asc' },
         },
       },
@@ -97,7 +100,10 @@ async function registrarResultado(req, res, next) {
         equipoLocal: { select: { id: true, nombre: true } },
         equipoVisitante: { select: { id: true, nombre: true } },
         eventos: {
-          include: { jugador: { select: { id: true, nombre: true } } },
+          include: {
+            jugador: { select: { id: true, nombre: true } },
+            jugadorEntra: { select: { id: true, nombre: true } },
+          },
           orderBy: { minuto: 'asc' },
         },
       },
@@ -110,12 +116,19 @@ async function registrarResultado(req, res, next) {
 
 async function addEvento(req, res, next) {
   try {
+    if (req.body.tipo === 'SUSTITUCION' && !req.body.jugadorEntraId) {
+      return res.status(400).json({ error: 'Debes indicar el jugador que entra en la sustitución' });
+    }
+
     const evento = await prisma.eventoPartido.create({
       data: {
         partidoId: req.params.id,
         ...req.body,
       },
-      include: { jugador: { select: { id: true, nombre: true } } },
+      include: {
+        jugador: { select: { id: true, nombre: true } },
+        jugadorEntra: { select: { id: true, nombre: true } },
+      },
     });
 
     if (req.body.tipo === 'GOL') {

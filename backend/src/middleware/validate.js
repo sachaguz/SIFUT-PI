@@ -65,7 +65,15 @@ const v = {
   equipo: [
     body('nombre').trim().notEmpty().withMessage('Nombre es requerido'),
     body('categoria').trim().notEmpty().withMessage('Categoría es requerida'),
-    body('torneoId').isUUID().withMessage('Torneo inválido'),
+    body('torneoId').optional().isUUID().withMessage('Torneo inválido'),
+    body('torneoIds').optional().isArray({ min: 1 }).withMessage('Debe seleccionar al menos un torneo'),
+    body('torneoIds.*').optional().isUUID().withMessage('Torneo inválido'),
+    body().custom((value) => {
+      if (!value.torneoId && (!value.torneoIds || value.torneoIds.length === 0)) {
+        throw new Error('Debe seleccionar al menos un torneo');
+      }
+      return true;
+    }),
     handleValidation,
   ],
   jugador: [
@@ -96,7 +104,12 @@ const v = {
   evento: [
     body('tipo').isIn(['GOL', 'AUTOGOL', 'TARJETA_AMARILLA', 'TARJETA_ROJA', 'SUSTITUCION']).withMessage('Tipo de evento inválido'),
     body('jugadorId').isUUID().withMessage('Jugador inválido'),
+    body('jugadorEntraId').optional().isUUID().withMessage('Jugador que entra inválido'),
     body('minuto').isInt({ min: 0, max: 120 }).withMessage('Minuto inválido'),
+    handleValidation,
+  ],
+  asignarTorneo: [
+    body('torneoId').isUUID().withMessage('Torneo inválido'),
     handleValidation,
   ],
   uuid: [

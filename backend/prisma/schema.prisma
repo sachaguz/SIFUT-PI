@@ -144,7 +144,7 @@ model Torneo {
   estado      EstadoTorneo @default(ACTIVO)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  equipos     Equipo[]
+  equipos     Equipo[]     @relation("EquipoTorneos")
   partidos    Partido[]
 }
 
@@ -152,8 +152,7 @@ model Equipo {
   id                String    @id @default(uuid())
   nombre            String
   categoria         String
-  torneoId          String
-  torneo            Torneo    @relation(fields: [torneoId], references: [id], onDelete: Cascade)
+  torneos           Torneo[]  @relation("EquipoTorneos")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   jugadores         Jugador[]
@@ -162,15 +161,16 @@ model Equipo {
 }
 
 model Jugador {
-  id             String          @id @default(uuid())
-  nombre         String
-  numeroCamiseta Int
-  posicion       Posicion
-  equipoId       String
-  equipo         Equipo          @relation(fields: [equipoId], references: [id], onDelete: Cascade)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  eventos        EventoPartido[]
+  id                  String          @id @default(uuid())
+  nombre              String
+  numeroCamiseta      Int
+  posicion            Posicion
+  equipoId            String
+  equipo              Equipo          @relation(fields: [equipoId], references: [id], onDelete: Cascade)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  eventos             EventoPartido[] @relation("EventoJugador")
+  eventosComoEntrante EventoPartido[] @relation("EventoJugadorEntra")
 }
 
 model Partido {
@@ -199,14 +199,16 @@ model Partido {
 }
 
 model EventoPartido {
-  id        String     @id @default(uuid())
-  partidoId String
-  partido   Partido    @relation(fields: [partidoId], references: [id], onDelete: Cascade)
-  tipo      TipoEvento
-  jugadorId String
-  jugador   Jugador    @relation(fields: [jugadorId], references: [id])
-  minuto    Int
-  createdAt DateTime   @default(now())
+  id             String     @id @default(uuid())
+  partidoId      String
+  partido        Partido    @relation(fields: [partidoId], references: [id], onDelete: Cascade)
+  tipo           TipoEvento
+  jugadorId      String
+  jugador        Jugador    @relation("EventoJugador", fields: [jugadorId], references: [id])
+  jugadorEntraId String?
+  jugadorEntra   Jugador?   @relation("EventoJugadorEntra", fields: [jugadorEntraId], references: [id])
+  minuto         Int
+  createdAt      DateTime   @default(now())
 }
 
 model Pago {

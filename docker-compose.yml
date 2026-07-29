@@ -92,7 +92,7 @@ services:
   # ─── Database Migration (run once) ──────────────────────────────
   migrate:
     build: ./backend
-    command: sh -c "npx prisma db push && node prisma/seed.js"
+    command: sh -c "npx prisma db push --accept-data-loss && node prisma/seed.js"
     environment:
       DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
     depends_on:

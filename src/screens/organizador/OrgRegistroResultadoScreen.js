@@ -93,17 +93,102 @@ function EventoForm({ titulo, equipos, jugadoresLocal, jugadoresVisitante, local
   );
 }
 
+function SustitucionForm({ equipos, jugadoresLocal, jugadoresVisitante, localName, onAgregar }) {
+  const [equipo, setEquipo] = useState(equipos[0]);
+  const [saleIdx, setSaleIdx] = useState(0);
+  const [entraIdx, setEntraIdx] = useState(1);
+  const [minuto, setMinuto] = useState('');
+
+  const jugadores = equipo === localName ? jugadoresLocal : jugadoresVisitante;
+  const jugadorSale = jugadores[saleIdx] || jugadores[0];
+  const jugadorEntra = jugadores[entraIdx] || jugadores[0];
+
+  const handleAgregar = () => {
+    if (!jugadorSale || !jugadorEntra || !minuto) {
+      Alert.alert('Faltan datos', 'Selecciona ambos jugadores y el minuto.');
+      return;
+    }
+    if (jugadorSale.id === jugadorEntra.id) {
+      Alert.alert('Jugadores inválidos', 'El jugador que sale y el que entra deben ser distintos.');
+      return;
+    }
+    onAgregar({
+      jugadorId: jugadorSale.id,
+      jugadorNombre: jugadorSale.nombre,
+      jugadorEntraId: jugadorEntra.id,
+      jugadorEntraNombre: jugadorEntra.nombre,
+      equipoNombre: equipo,
+      teamSide: equipo === localName ? 'local' : 'visitante',
+      minuto: parseInt(minuto, 10),
+      tipo: 'SUSTITUCION',
+    });
+    setMinuto('');
+  };
+
+  return (
+    <Card>
+      <Text style={styles.cardTitle}>Cambios / Salidas</Text>
+      <PillSelector label="Equipo" options={equipos} value={equipo} onChange={(v) => { setEquipo(v); setSaleIdx(0); setEntraIdx(1); }} />
+      <PillSelector
+        label="Sale"
+        options={jugadores.map((j) => j.nombre)}
+        value={jugadorSale?.nombre || ''}
+        onChange={(name) => {
+          const idx = jugadores.findIndex((j) => j.nombre === name);
+          if (idx >= 0) setSaleIdx(idx);
+        }}
+      />
+      <PillSelector
+        label="Entra"
+        options={jugadores.map((j) => j.nombre)}
+        value={jugadorEntra?.nombre || ''}
+        onChange={(name) => {
+          const idx = jugadores.findIndex((j) => j.nombre === name);
+          if (idx >= 0) setEntraIdx(idx);
+        }}
+      />
+      <FormInput
+        label="Minuto"
+        placeholder="45"
+        keyboardType="numeric"
+        value={minuto}
+        onChangeText={setMinuto}
+      />
+      <PrimaryButton title="Agregar" variant="outline" small onPress={handleAgregar} />
+    </Card>
+  );
+}
+
 function EventoRow({ evento, onDelete }) {
   const color = EVENTO_COLORS[evento.tipo] || colors.textMuted;
-  const label = EVENTO_LABELS[evento.tipo] || evento.tipo;
+  const equipoNombre = evento.equipoNombre || evento.jugador?.equipo?.nombre || '';
 
+  if (evento.tipo === 'SUSTITUCION') {
+    const sale = evento.jugadorNombre || evento.jugador?.nombre || '';
+    const entra = evento.jugadorEntraNombre || evento.jugadorEntra?.nombre || '';
+    return (
+      <View style={styles.eventoRow}>
+        <Text style={styles.eventoMinuto}>{evento.minuto}'</Text>
+        <View style={[styles.cardIcon, { backgroundColor: color }]} />
+        <View style={{ flex: 1 }}>
+          <Text style={typography.body}>Sale {sale}, entra {entra}</Text>
+          <Text style={styles.eventoEquipo}>{equipoNombre}</Text>
+        </View>
+        <TouchableOpacity onPress={onDelete} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="trash-outline" size={18} color={colors.danger} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const label = EVENTO_LABELS[evento.tipo] || evento.tipo;
   return (
     <View style={styles.eventoRow}>
       <Text style={styles.eventoMinuto}>{evento.minuto}'</Text>
       <View style={[styles.cardIcon, { backgroundColor: color }]} />
       <View style={{ flex: 1 }}>
         <Text style={typography.body}>{label} - {evento.jugadorNombre || evento.jugador?.nombre || ''}</Text>
-        <Text style={styles.eventoEquipo}>{evento.equipoNombre || evento.jugador?.equipo?.nombre || ''}</Text>
+        <Text style={styles.eventoEquipo}>{equipoNombre}</Text>
       </View>
       <TouchableOpacity onPress={onDelete} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
         <Ionicons name="trash-outline" size={18} color={colors.danger} />
@@ -120,30 +205,38 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
   const [newEventos, setNewEventos] = useState([]);
   const [penalesLocal, setPenalesLocal] = useState('');
   const [penalesVisitante, setPenalesVisitante] = useState('');
+  const [estadoActual, setEstadoActual] = useState(partido.estado);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [finalizando, setFinalizando] = useState(false);
   const isLiguilla = partido.fase === 'LIGUILLA';
+
+  const cargarDatos = useCallback(() => {
+    return Promise.all([
+      api.get(`/jugadores/equipo/${partido.equipoLocal.id}`),
+      api.get(`/jugadores/equipo/${partido.equipoVisitante.id}`),
+      api.get(`/partidos/${partido.id}`),
+    ]).then(([jl, jv, p]) => {
+      setJugadoresLocal(jl.data);
+      setJugadoresVisitante(jv.data);
+      const existingEvents = (p.data.eventos || []).map((e) => ({
+        ...e,
+        jugadorNombre: e.jugador?.nombre || '',
+        jugadorEntraNombre: e.jugadorEntra?.nombre || '',
+        equipoNombre: e.jugador?.equipo?.nombre || '',
+        teamSide: e.jugador?.equipo?.id === partido.equipoLocal.id ? 'local' : 'visitante',
+      }));
+      setSavedEventos(existingEvents);
+      setEstadoActual(p.data.estado);
+      if (p.data.penalesLocal) setPenalesLocal(String(p.data.penalesLocal));
+      if (p.data.penalesVisitante) setPenalesVisitante(String(p.data.penalesVisitante));
+    });
+  }, [partido.id, partido.equipoLocal.id, partido.equipoVisitante.id]);
 
   useFocusEffect(
     useCallback(() => {
-      Promise.all([
-        api.get(`/jugadores/equipo/${partido.equipoLocal.id}`),
-        api.get(`/jugadores/equipo/${partido.equipoVisitante.id}`),
-        api.get(`/partidos/${partido.id}`),
-      ]).then(([jl, jv, p]) => {
-        setJugadoresLocal(jl.data);
-        setJugadoresVisitante(jv.data);
-        const existingEvents = (p.data.eventos || []).map((e) => ({
-          ...e,
-          jugadorNombre: e.jugador?.nombre || '',
-          equipoNombre: e.jugador?.equipo?.nombre || '',
-          teamSide: e.jugador?.equipo?.id === partido.equipoLocal.id ? 'local' : 'visitante',
-        }));
-        setSavedEventos(existingEvents);
-        if (p.data.penalesLocal) setPenalesLocal(String(p.data.penalesLocal));
-        if (p.data.penalesVisitante) setPenalesVisitante(String(p.data.penalesVisitante));
-      }).finally(() => setLoading(false));
-    }, [])
+      cargarDatos().finally(() => setLoading(false));
+    }, [cargarDatos])
   );
 
   const allEventos = [...savedEventos, ...newEventos];
@@ -159,7 +252,7 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
   ).length;
 
   const handleDeleteSaved = async (evento) => {
-    Alert.alert('Eliminar evento', `¿Eliminar ${EVENTO_LABELS[evento.tipo]} de ${evento.jugadorNombre} (min ${evento.minuto})?`, [
+    Alert.alert('Eliminar evento', `¿Eliminar este evento (min ${evento.minuto})?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
@@ -180,16 +273,39 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
     setNewEventos((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const persistirEventosNuevos = async () => {
+    for (const evento of newEventos) {
+      const body = {
+        tipo: evento.tipo,
+        jugadorId: evento.jugadorId,
+        minuto: evento.minuto,
+      };
+      if (evento.tipo === 'SUSTITUCION') body.jugadorEntraId = evento.jugadorEntraId;
+      await api.post(`/partidos/${partido.id}/eventos`, body);
+    }
+  };
+
   const handleGuardar = async () => {
     setSaving(true);
     try {
-      for (const evento of newEventos) {
-        await api.post(`/partidos/${partido.id}/eventos`, {
-          tipo: evento.tipo,
-          jugadorId: evento.jugadorId,
-          minuto: evento.minuto,
-        });
+      await persistirEventosNuevos();
+      if (partido.estado === 'PENDIENTE' && estadoActual === 'PENDIENTE') {
+        await api.put(`/partidos/${partido.id}`, { estado: 'EN_CURSO' });
       }
+      setNewEventos([]);
+      await cargarDatos();
+      Alert.alert('Cambios guardados', 'Los eventos se guardaron sin finalizar el partido.');
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || 'No se pudo guardar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFinalizar = async () => {
+    setFinalizando(true);
+    try {
+      await persistirEventosNuevos();
 
       const body = { golesLocal, golesVisitante };
       if (isLiguilla && penalesLocal && penalesVisitante) {
@@ -206,7 +322,7 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
     } catch (err) {
       Alert.alert('Error', err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || 'No se pudo guardar.');
     } finally {
-      setSaving(false);
+      setFinalizando(false);
     }
   };
 
@@ -215,6 +331,7 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
   }
 
   const equipos = [partido.local, partido.visitante];
+  const saving_any = saving || finalizando;
 
   return (
     <ScreenContainer>
@@ -227,7 +344,9 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
         <Text style={styles.scoreText}>
           {golesLocal} - {golesVisitante}
         </Text>
-        <Text style={styles.scoreCaption}>Marcador</Text>
+        <Text style={styles.scoreCaption}>
+          {estadoActual === 'EN_CURSO' ? 'En curso' : 'Marcador provisional'}
+        </Text>
       </Card>
 
       {allEventos.length > 0 && (
@@ -253,14 +372,11 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
         onAgregar={(evento) => setNewEventos((prev) => [...prev, evento])}
       />
 
-      <EventoForm
-        titulo="Cambios / Salidas"
+      <SustitucionForm
         equipos={equipos}
         jugadoresLocal={jugadoresLocal}
         jugadoresVisitante={jugadoresVisitante}
         localName={partido.local}
-        tipos={[{ label: 'Sustitución', value: 'SUSTITUCION' }]}
-        tipoLabel="Tipo"
         onAgregar={(evento) => setNewEventos((prev) => [...prev, evento])}
       />
 
@@ -301,8 +417,14 @@ export default function OrgRegistroResultadoScreen({ navigation, route }) {
 
       <View style={styles.actions}>
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
-        <PrimaryButton title={saving ? 'Guardando...' : 'Finalizar partido'} onPress={handleGuardar} disabled={saving} style={styles.actionBtn} />
+        <PrimaryButton title={saving ? 'Guardando...' : 'Guardar'} onPress={handleGuardar} disabled={saving_any} style={styles.actionBtn} />
       </View>
+      <PrimaryButton
+        title={finalizando ? 'Finalizando...' : 'Finalizar partido'}
+        onPress={handleFinalizar}
+        disabled={saving_any}
+        style={{ marginTop: spacing.sm, marginBottom: spacing.xl }}
+      />
     </ScreenContainer>
   );
 }
@@ -338,7 +460,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     marginTop: spacing.md,
-    marginBottom: spacing.xl,
   },
   actionBtn: {
     flex: 1,

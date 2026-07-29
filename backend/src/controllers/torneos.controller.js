@@ -1,5 +1,39 @@
 const prisma = require('../config/database');
 
+const DIA_INDEX = { dom: 0, lun: 1, mar: 2, mie: 3, jue: 4, vie: 5, sab: 6 };
+
+function normalizeDia(d) {
+  return String(d).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().slice(0, 3);
+}
+
+function getValidDayIndices(diasJuego) {
+  if (!Array.isArray(diasJuego) || diasJuego.length === 0) return null;
+  const indices = diasJuego.map((d) => DIA_INDEX[normalizeDia(d)]).filter((i) => i !== undefined);
+  return indices.length > 0 ? indices : null;
+}
+
+function generateMatchDates(fechaInicio, diasJuego, roundsNeeded) {
+  const validIndices = getValidDayIndices(diasJuego);
+  const dates = [];
+  const cursor = new Date(fechaInicio);
+
+  if (!validIndices) {
+    for (let i = 0; i < roundsNeeded; i++) {
+      dates.push(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 7);
+    }
+    return dates;
+  }
+
+  while (dates.length < roundsNeeded) {
+    if (validIndices.includes(cursor.getDay())) {
+      dates.push(new Date(cursor));
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dates;
+}
+
 async function getAll(req, res, next) {
   try {
     const where = {};
@@ -159,6 +193,8 @@ async function generarJornadas(req, res, next) {
     const total = teams.length;
     const rounds = total - 1;
 
+    const roundDates = generateMatchDates(torneo.fechaInicio, torneo.diasJuego, rounds);
+
     const fixtures = [];
     const rotation = teams.slice(1);
 
@@ -172,7 +208,7 @@ async function generarJornadas(req, res, next) {
             torneoId: torneo.id,
             equipoLocalId: home.id,
             equipoVisitanteId: away.id,
-            fecha: new Date(torneo.fechaInicio),
+            fecha: roundDates[round],
             hora: '17:00',
             jornada: round + 1,
             fase: 'JORNADA',

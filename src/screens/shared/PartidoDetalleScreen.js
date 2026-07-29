@@ -70,6 +70,8 @@ export default function PartidoDetalleScreen({ route }) {
             const marca = EVENTO_MARCA[evento.tipo];
             const jugadorNombre = evento.jugador?.nombre || '';
             const equipoNombre = evento.jugador?.equipo?.nombre || '';
+            const isSustitucion = evento.tipo === 'SUSTITUCION';
+            const entraNombre = evento.jugadorEntra?.nombre || '';
             return (
               <View key={evento.id || index} style={styles.eventoRow}>
                 <Text style={styles.eventoMinuto}>{evento.minuto}'</Text>
@@ -84,7 +86,9 @@ export default function PartidoDetalleScreen({ route }) {
                   />
                 )}
                 <Text style={styles.eventoTexto}>
-                  {marca?.label || evento.tipo} · {jugadorNombre} ({equipoNombre})
+                  {isSustitucion
+                    ? `Sale ${jugadorNombre}, entra ${entraNombre} (${equipoNombre})`
+                    : `${marca?.label || evento.tipo} · ${jugadorNombre} (${equipoNombre})`}
                 </Text>
               </View>
             );
