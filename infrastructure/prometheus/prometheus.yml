@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'sifut-api-private'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['api-private:3001']
+        labels:
+          instance: 'api-private'
+
+  - job_name: 'sifut-api-1'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['nginx:8080']
+        labels:
+          instance: 'api-via-nginx'
+
+  - job_name: 'nginx'
+    metrics_path: /nginx_status
+    static_configs:
+      - targets: ['nginx:8080']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

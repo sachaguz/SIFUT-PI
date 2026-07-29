@@ -4,6 +4,12 @@ const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
 async function main() {
+  const existing = await prisma.user.findUnique({ where: { email: 'admin@sifut.com' } });
+  if (existing) {
+    console.log('Database already seeded, skipping.');
+    return;
+  }
+
   console.log('Seeding database...');
 
   // --- Users ---

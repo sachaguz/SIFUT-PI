@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL Database ─────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sifut
+      POSTGRES_PASSWORD: sifut_password
+      POSTGRES_DB: sifut_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sifut -d sifut_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Public API Instance 1 (Load Balanced) ───────────────────────
+  api-1:
+    build: ./backend
+    restart: unless-stopped
+    command: node src/server.js
+    environment:
+      DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:-cambiar-por-un-secreto-seguro-en-produccion}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Public API Instance 2 (Load Balanced) ───────────────────────
+  api-2:
+    build: ./backend
+    restart: unless-stopped
+    command: node src/server.js
+    environment:
+      DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:-cambiar-por-un-secreto-seguro-en-produccion}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Private API (Metrics + Admin Routes) ────────────────────────
+  api-private:
+    build: ./backend
+    restart: unless-stopped
+    command: node src/server-private.js
+    environment:
+      DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
+      JWT_SECRET: ${JWT_SECRET:-cambiar-por-un-secreto-seguro-en-produccion}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      PRIVATE_PORT: 3001
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+
+  # ─── Database Migration (run once) ──────────────────────────────
+  migrate:
+    build: ./backend
+    command: sh -c "npx prisma db push && node prisma/seed.js"
+    environment:
+      DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+    restart: "no"
+
+  # ─── Admin Web Panel ─────────────────────────────────────────────
+  admin-panel:
+    build: ./admin-panel
+    restart: unless-stopped
+    networks:
+      - backend-net
+
+  # ─── Nginx Reverse Proxy + SSL + Load Balancer ──────────────────
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api-1
+      - api-2
+      - api-private
+      - admin-panel
+    networks:
+      - backend-net
+
+  # ─── Prometheus (Metrics Collection) ─────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - backend-net
+
+  # ─── Grafana (Monitoring Dashboards) ─────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-sifut_admin}
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - backend-net
+
+volumes:
+  pgdata:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  backend-net:
+    driver: bridge

@@ -32,6 +32,17 @@ yarn-error.*
 
 # local env files
 .env*.local
+backend/.env
+
+# SSL certificates (generated)
+infrastructure/ssl/*.key
+infrastructure/ssl/*.crt
+infrastructure/ssl/*.pem
+
+# Docker volumes
+pgdata/
+prometheus-data/
+grafana-data/
 
 # typescript
 *.tsbuildinfo

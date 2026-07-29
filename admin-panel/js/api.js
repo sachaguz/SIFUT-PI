@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = (window.location.hostname === 'localhost' && window.location.port === '')
+  ? '/api'
+  : 'http://localhost:3000/api';
 
 const api = {
   token: localStorage.getItem('accessToken'),
