@@ -9,8 +9,8 @@ router.get('/', authenticate, ctrl.getAll);
 router.get('/:id', authenticate, v.uuid, ctrl.getById);
 router.post('/', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.partido, ctrl.create);
 router.put('/:id', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, ctrl.update);
-router.patch('/:id/resultado', authenticate, roleGuard('ADMIN'), v.uuid, v.resultado, ctrl.registrarResultado);
-router.post('/:id/eventos', authenticate, roleGuard('ADMIN'), v.uuid, v.evento, ctrl.addEvento);
-router.delete('/:id/eventos/:eventoId', authenticate, roleGuard('ADMIN'), ctrl.removeEvento);
+router.patch('/:id/resultado', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, v.resultado, ctrl.registrarResultado);
+router.post('/:id/eventos', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), v.uuid, v.evento, ctrl.addEvento);
+router.delete('/:id/eventos/:eventoId', authenticate, roleGuard('ORGANIZADOR', 'ADMIN'), ctrl.removeEvento);
 
 module.exports = router;

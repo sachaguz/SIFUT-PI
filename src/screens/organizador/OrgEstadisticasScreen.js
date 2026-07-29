@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
@@ -62,11 +61,11 @@ export default function OrgEstadisticasScreen() {
                 <Text style={styles.equipo}>{item.equipo}</Text>
               </View>
               <View style={styles.tarjeta}>
-                <Ionicons name="card" size={14} color={colors.warning} />
+                <View style={[styles.cardIcon, { backgroundColor: colors.warning }]} />
                 <Text style={styles.tarjetaCount}>{item.amarillas}</Text>
               </View>
               <View style={styles.tarjeta}>
-                <Ionicons name="card" size={14} color={colors.danger} />
+                <View style={[styles.cardIcon, { backgroundColor: colors.danger }]} />
                 <Text style={styles.tarjetaCount}>{item.rojas}</Text>
               </View>
             </View>
@@ -84,4 +83,5 @@ const styles = StyleSheet.create({
   equipo: { ...typography.caption },
   tarjeta: { flexDirection: 'row', alignItems: 'center', gap: 4, width: 40 },
   tarjetaCount: { ...typography.body, fontFamily: fonts.semiBold },
+  cardIcon: { width: 12, height: 16, borderRadius: 2 },
 });

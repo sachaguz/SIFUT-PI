@@ -32,17 +32,23 @@ export default function OrgPartidosScreen({ navigation }) {
         const visitante = partido.equipoVisitante?.nombre || '';
         const torneo = partido.torneo?.nombre || '';
         const cancha = partido.cancha ? `${partido.cancha.nombre} - ${partido.cancha.sede?.nombre || ''}` : '';
+        const isFinalizado = partido.estado === 'FINALIZADO';
         return (
           <ListRow
             key={partido.id}
             icon="football-outline"
             title={`${local} vs ${visitante}`}
-            subtitle={`${torneo} · Jornada ${partido.jornada}`}
+            subtitle={`${torneo} · Jornada ${partido.jornada}${partido.fase === 'LIGUILLA' ? ' (Liguilla)' : ''}`}
             meta={`${formatDate(partido.fecha)} · ${partido.hora} · ${cancha}`}
-            right={<Badge label={estadoLabel(partido.estado)} tone={partido.estado === 'FINALIZADO' ? 'success' : 'warning'} />}
-            onPress={() => navigation.navigate('PartidoDetalle', {
-              partido: { ...partido, local, visitante, torneo, cancha, fecha: formatDate(partido.fecha) },
-            })}
+            right={<Badge label={estadoLabel(partido.estado)} tone={isFinalizado ? 'success' : 'warning'} />}
+            onPress={() => isFinalizado
+              ? navigation.navigate('PartidoDetalle', {
+                  partido: { ...partido, local, visitante, torneo, cancha, fecha: formatDate(partido.fecha) },
+                })
+              : navigation.navigate('OrgRegistroResultado', {
+                  partido: { ...partido, local, visitante, torneo, cancha, fecha: formatDate(partido.fecha) },
+                })
+            }
           />
         );
       })}

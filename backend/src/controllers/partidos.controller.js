@@ -79,16 +79,20 @@ async function update(req, res, next) {
 
 async function registrarResultado(req, res, next) {
   try {
-    const { golesLocal, golesVisitante, estadisticas } = req.body;
+    const { golesLocal, golesVisitante, penalesLocal, penalesVisitante, estadisticas } = req.body;
+
+    const data = {
+      golesLocal,
+      golesVisitante,
+      estadisticas: estadisticas || undefined,
+      estado: 'FINALIZADO',
+    };
+    if (penalesLocal != null) data.penalesLocal = penalesLocal;
+    if (penalesVisitante != null) data.penalesVisitante = penalesVisitante;
 
     const partido = await prisma.partido.update({
       where: { id: req.params.id },
-      data: {
-        golesLocal,
-        golesVisitante,
-        estadisticas: estadisticas || undefined,
-        estado: 'FINALIZADO',
-      },
+      data,
       include: {
         equipoLocal: { select: { id: true, nombre: true } },
         equipoVisitante: { select: { id: true, nombre: true } },
@@ -140,7 +144,30 @@ async function addEvento(req, res, next) {
 
 async function removeEvento(req, res, next) {
   try {
+    const evento = await prisma.eventoPartido.findUnique({
+      where: { id: req.params.eventoId },
+      include: { jugador: true },
+    });
+    if (!evento) return res.status(404).json({ error: 'Evento no encontrado' });
+
     await prisma.eventoPartido.delete({ where: { id: req.params.eventoId } });
+
+    if (evento.tipo === 'GOL' || evento.tipo === 'AUTOGOL') {
+      const partido = await prisma.partido.findUnique({ where: { id: evento.partidoId } });
+      const isLocal = evento.jugador.equipoId === partido.equipoLocalId;
+      if (evento.tipo === 'GOL') {
+        await prisma.partido.update({
+          where: { id: evento.partidoId },
+          data: isLocal ? { golesLocal: { decrement: 1 } } : { golesVisitante: { decrement: 1 } },
+        });
+      } else {
+        await prisma.partido.update({
+          where: { id: evento.partidoId },
+          data: isLocal ? { golesVisitante: { decrement: 1 } } : { golesLocal: { decrement: 1 } },
+        });
+      }
+    }
+
     res.json({ message: 'Evento eliminado' });
   } catch (err) {
     next(err);

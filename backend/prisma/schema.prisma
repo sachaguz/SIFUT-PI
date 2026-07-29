@@ -186,9 +186,12 @@ model Partido {
   fecha             DateTime
   hora              String
   jornada           Int
+  fase              String        @default("JORNADA")
   estado            EstadoPartido @default(PENDIENTE)
   golesLocal        Int           @default(0)
   golesVisitante    Int           @default(0)
+  penalesLocal      Int           @default(0)
+  penalesVisitante  Int           @default(0)
   estadisticas      Json?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

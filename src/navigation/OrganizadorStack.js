@@ -5,6 +5,7 @@ import OrgTorneoDetalleScreen from '../screens/organizador/OrgTorneoDetalleScree
 import OrgEquipoFormScreen from '../screens/organizador/OrgEquipoFormScreen';
 import OrgJugadoresScreen from '../screens/organizador/OrgJugadoresScreen';
 import OrgPartidoFormScreen from '../screens/organizador/OrgPartidoFormScreen';
+import OrgRegistroResultadoScreen from '../screens/organizador/OrgRegistroResultadoScreen';
 import PartidoDetalleScreen from '../screens/shared/PartidoDetalleScreen';
 import { stackScreenOptions } from './navigationTheme';
 
@@ -19,6 +20,7 @@ export default function OrganizadorStack() {
       <Stack.Screen name="OrgEquipoForm" component={OrgEquipoFormScreen} options={{ title: 'Inscribir equipo' }} />
       <Stack.Screen name="OrgJugadores" component={OrgJugadoresScreen} options={{ title: 'Jugadores' }} />
       <Stack.Screen name="OrgPartidoForm" component={OrgPartidoFormScreen} options={{ title: 'Programar partido' }} />
+      <Stack.Screen name="OrgRegistroResultado" component={OrgRegistroResultadoScreen} options={{ title: 'Registrar resultado' }} />
       <Stack.Screen name="PartidoDetalle" component={PartidoDetalleScreen} options={{ title: 'Partido' }} />
     </Stack.Navigator>
   );

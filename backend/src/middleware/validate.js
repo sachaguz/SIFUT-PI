@@ -88,6 +88,8 @@ const v = {
   resultado: [
     body('golesLocal').isInt({ min: 0 }).withMessage('Goles locales inválidos'),
     body('golesVisitante').isInt({ min: 0 }).withMessage('Goles visitantes inválidos'),
+    body('penalesLocal').optional().isInt({ min: 0 }).withMessage('Penales locales inválidos'),
+    body('penalesVisitante').optional().isInt({ min: 0 }).withMessage('Penales visitantes inválidos'),
     body('estadisticas').optional().isObject(),
     handleValidation,
   ],

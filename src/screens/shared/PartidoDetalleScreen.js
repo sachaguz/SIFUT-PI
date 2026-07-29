@@ -5,14 +5,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import api from '../../services/api';
-import { colors, spacing, typography } from '../../theme/colors';
+import { colors, fonts, spacing, typography } from '../../theme/colors';
 
 const EVENTO_MARCA = {
-  GOL: { icon: 'football', color: colors.primary, label: 'Gol' },
-  AUTOGOL: { icon: 'football', color: colors.textMuted, label: 'Autogol' },
-  TARJETA_ROJA: { icon: 'card', color: colors.danger, label: 'Roja' },
-  TARJETA_AMARILLA: { icon: 'card', color: colors.warning, label: 'Amarilla' },
-  SUSTITUCION: { icon: 'swap-horizontal', color: colors.secondary, label: 'Cambio' },
+  GOL: { icon: 'football', color: colors.primary, label: 'Gol', useIcon: true },
+  AUTOGOL: { icon: 'football', color: colors.textMuted, label: 'Autogol', useIcon: true },
+  TARJETA_ROJA: { color: colors.danger, label: 'Roja', useCard: true },
+  TARJETA_AMARILLA: { color: colors.warning, label: 'Amarilla', useCard: true },
+  SUSTITUCION: { icon: 'swap-horizontal', color: colors.secondary, label: 'Cambio', useIcon: true },
 };
 
 export default function PartidoDetalleScreen({ route }) {
@@ -51,8 +51,13 @@ export default function PartidoDetalleScreen({ route }) {
           </Text>
           <Text style={styles.equipo}>{visitante}</Text>
         </View>
+        {(partido.penalesLocal > 0 || partido.penalesVisitante > 0) && (
+          <Text style={styles.penales}>
+            Penales: {partido.penalesLocal} - {partido.penalesVisitante}
+          </Text>
+        )}
         <Text style={styles.meta}>
-          {torneo} · {cancha}
+          {torneo} · {cancha}{partido.fase === 'LIGUILLA' ? ' · Liguilla' : ''}
         </Text>
       </Card>
 
@@ -68,12 +73,16 @@ export default function PartidoDetalleScreen({ route }) {
             return (
               <View key={evento.id || index} style={styles.eventoRow}>
                 <Text style={styles.eventoMinuto}>{evento.minuto}'</Text>
-                <Ionicons
-                  name={marca?.icon || 'ellipse'}
-                  size={16}
-                  color={marca?.color || colors.textMuted}
-                  style={styles.eventoIcon}
-                />
+                {marca?.useCard ? (
+                  <View style={[styles.cardIcon, { backgroundColor: marca.color }]} />
+                ) : (
+                  <Ionicons
+                    name={marca?.icon || 'ellipse'}
+                    size={16}
+                    color={marca?.color || colors.textMuted}
+                    style={styles.eventoIcon}
+                  />
+                )}
                 <Text style={styles.eventoTexto}>
                   {marca?.label || evento.tipo} · {jugadorNombre} ({equipoNombre})
                 </Text>
@@ -131,6 +140,12 @@ const styles = StyleSheet.create({
   score: {
     ...typography.display,
   },
+  penales: {
+    ...typography.caption,
+    fontFamily: fonts.semiBold,
+    color: colors.secondary,
+    marginTop: spacing.xs,
+  },
   meta: {
     ...typography.caption,
     marginTop: spacing.sm,
@@ -151,6 +166,12 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   eventoIcon: {
+    marginRight: spacing.sm,
+  },
+  cardIcon: {
+    width: 14,
+    height: 18,
+    borderRadius: 2,
     marginRight: spacing.sm,
   },
   eventoTexto: {

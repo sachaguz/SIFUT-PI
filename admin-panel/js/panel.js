@@ -458,13 +458,13 @@ async function loadTesoreria() {
 }
 
 async function approvePago(id) {
-  try { await api.patch(`/pagos/${id}`, { estado: 'APROBADO' }); toast('Pago aprobado'); loadTesoreria(); }
+  try { await api.patch(`/pagos/${id}/aprobar`); toast('Pago aprobado'); loadTesoreria(); }
   catch (err) { toast(err.message, true); }
 }
 
 async function rejectPago(id) {
   if (!confirm('¿Rechazar este pago?')) return;
-  try { await api.patch(`/pagos/${id}`, { estado: 'RECHAZADO' }); toast('Pago rechazado'); loadTesoreria(); }
+  try { await api.patch(`/pagos/${id}/rechazar`); toast('Pago rechazado'); loadTesoreria(); }
   catch (err) { toast(err.message, true); }
 }
 
