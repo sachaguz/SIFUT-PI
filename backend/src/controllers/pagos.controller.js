@@ -103,6 +103,8 @@ async function getResumen(req, res, next) {
       }),
     ]);
 
+    const montoPendiente = pendientes.reduce((sum, p) => sum + Number(p.monto), 0);
+
     res.json({
       ingresoDiario: {
         total: ingresoDiario._sum.monto || 0,
@@ -113,6 +115,7 @@ async function getResumen(req, res, next) {
         cantidad: ingresoMensual._count,
       },
       pendientes,
+      montoPendiente,
     });
   } catch (err) {
     next(err);

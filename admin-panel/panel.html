@@ -15,16 +15,42 @@
         <span>Panel de Administración</span>
       </div>
       <nav class="sidebar-nav">
+        <div class="sidebar-section">General</div>
+        <a href="#dashboard" data-section="dashboard" class="active">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+          Dashboard
+        </a>
         <div class="sidebar-section">Infraestructura</div>
-        <a href="#sedes" data-section="sedes" class="active"><span class="icon">🏟️</span> Sedes</a>
-        <a href="#canchas" data-section="canchas"><span class="icon">⚽</span> Canchas</a>
-        <a href="#horarios" data-section="horarios"><span class="icon">🕐</span> Horarios</a>
+        <a href="#sedes" data-section="sedes">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-6h6v6"/><path d="M4 9h16"/></svg></span>
+          Sedes
+        </a>
+        <a href="#canchas" data-section="canchas">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M18 18l-3-3M18 6l-3 3M6 18l3-3"/></svg></span>
+          Canchas
+        </a>
+        <a href="#horarios" data-section="horarios">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+          Horarios
+        </a>
         <div class="sidebar-section">Operación</div>
-        <a href="#reservas" data-section="reservas"><span class="icon">📋</span> Reservas</a>
-        <a href="#resultados" data-section="resultados"><span class="icon">🏆</span> Resultados</a>
+        <a href="#reservas" data-section="reservas">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h3M8 17h6"/></svg></span>
+          Reservas
+        </a>
+        <a href="#resultados" data-section="resultados">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M6 3h12v5a6 6 0 0 1-12 0V3z"/><path d="M6 5H3v2a4 4 0 0 0 3 3.87M18 5h3v2a4 4 0 0 1-3 3.87"/></svg></span>
+          Resultados
+        </a>
         <div class="sidebar-section">Finanzas</div>
-        <a href="#tesoreria" data-section="tesoreria"><span class="icon">💰</span> Tesorería</a>
-        <a href="#pagos" data-section="pagos"><span class="icon">🧾</span> Pagos realizados</a>
+        <a href="#tesoreria" data-section="tesoreria">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><circle cx="16.5" cy="14.5" r="1.5"/></svg></span>
+          Tesorería
+        </a>
+        <a href="#pagos" data-section="pagos">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+          Pagos realizados
+        </a>
       </nav>
       <div class="sidebar-footer">
         <div class="user-info" id="userInfo"></div>
@@ -32,98 +58,134 @@
       </div>
     </aside>
 
-    <!-- Main content -->
-    <main class="main-content">
-
-      <!-- SEDES -->
-      <div id="sec-sedes" class="section active">
-        <div class="page-header flex-between">
-          <div>
-            <h1>Sedes</h1>
-            <p>Administra las sucursales del sistema</p>
+    <div class="content-area">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-search">
+          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+          <input type="text" id="topbarSearch" placeholder="Buscar una sección… (Enter)">
+        </div>
+        <div class="topbar-user">
+          <div class="who">
+            <div class="name" id="userName"></div>
+            <div class="role">Administrador</div>
           </div>
-          <button class="btn btn-primary" onclick="openSedeForm()">+ Nueva sede</button>
+          <div class="avatar" id="userAvatar"></div>
         </div>
-        <div class="card"><div id="sedesTable" class="table-wrap"></div></div>
-      </div>
+      </header>
 
-      <!-- CANCHAS -->
-      <div id="sec-canchas" class="section">
-        <div class="page-header flex-between">
-          <div>
-            <h1>Canchas</h1>
-            <p>Gestión de canchas por sede</p>
+      <!-- Main content -->
+      <main class="main-content">
+
+        <!-- DASHBOARD -->
+        <div id="sec-dashboard" class="section active">
+          <div class="page-header">
+            <h1>Dashboard</h1>
+            <p>Resumen general del sistema</p>
           </div>
-          <button class="btn btn-primary" onclick="openCanchaForm()">+ Nueva cancha</button>
+          <div id="dashboardKpis" class="dashboard-grid"></div>
+          <div class="charts-row">
+            <div class="card chart-card">
+              <div class="card-title">Canchas por sede</div>
+              <div id="dashboardBarChart"></div>
+            </div>
+            <div class="card chart-card">
+              <div class="card-title">Pagos por método</div>
+              <div id="dashboardDonutChart"></div>
+            </div>
+          </div>
         </div>
-        <div class="mb-md">
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Filtrar por sede</label>
-          <div id="canchasSedePills" class="pill-group mt-sm"></div>
-        </div>
-        <div class="card"><div id="canchasTable" class="table-wrap"></div></div>
-      </div>
 
-      <!-- HORARIOS -->
-      <div id="sec-horarios" class="section">
-        <div class="page-header">
-          <h1>Horarios</h1>
-          <p>Horarios de disponibilidad por sede</p>
+        <!-- SEDES -->
+        <div id="sec-sedes" class="section">
+          <div class="page-header flex-between">
+            <div>
+              <h1>Sedes</h1>
+              <p>Administra las sucursales del sistema</p>
+            </div>
+            <button class="btn btn-primary" onclick="openSedeForm()"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Nueva sede</button>
+          </div>
+          <div class="card"><div id="sedesTable" class="table-wrap"></div></div>
         </div>
-        <div class="mb-md">
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Sede</label>
-          <div id="horariosSedePills" class="pill-group mt-sm"></div>
-        </div>
-        <div class="mb-md">
-          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Día</label>
-          <div id="horariosDiaPills" class="pill-group mt-sm"></div>
-        </div>
-        <div class="card"><div id="horariosTable" class="table-wrap"></div></div>
-      </div>
 
-      <!-- RESERVAS -->
-      <div id="sec-reservas" class="section">
-        <div class="page-header">
-          <h1>Reservas del día</h1>
-          <p>Reservaciones registradas para hoy</p>
+        <!-- CANCHAS -->
+        <div id="sec-canchas" class="section">
+          <div class="page-header flex-between">
+            <div>
+              <h1>Canchas</h1>
+              <p>Gestión de canchas por sede</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCanchaForm()"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Nueva cancha</button>
+          </div>
+          <div class="mb-md">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Filtrar por sede</label>
+            <div id="canchasSedePills" class="pill-group mt-sm"></div>
+          </div>
+          <div class="card"><div id="canchasTable" class="table-wrap"></div></div>
         </div>
-        <div class="card"><div id="reservasTable" class="table-wrap"></div></div>
-      </div>
 
-      <!-- RESULTADOS -->
-      <div id="sec-resultados" class="section">
-        <div class="page-header">
-          <h1>Resultados</h1>
-          <p>Registro de resultados y eventos de partidos</p>
+        <!-- HORARIOS -->
+        <div id="sec-horarios" class="section">
+          <div class="page-header">
+            <h1>Horarios</h1>
+            <p>Horarios de disponibilidad por sede</p>
+          </div>
+          <div class="mb-md">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Sede</label>
+            <div id="horariosSedePills" class="pill-group mt-sm"></div>
+          </div>
+          <div class="mb-md">
+            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Día</label>
+            <div id="horariosDiaPills" class="pill-group mt-sm"></div>
+          </div>
+          <div class="card"><div id="horariosTable" class="table-wrap"></div></div>
         </div>
-        <div class="card"><div id="resultadosTable" class="table-wrap"></div></div>
-      </div>
 
-      <!-- TESORERIA -->
-      <div id="sec-tesoreria" class="section">
-        <div class="page-header">
-          <h1>Tesorería</h1>
-          <p>Resumen financiero y pagos pendientes</p>
+        <!-- RESERVAS -->
+        <div id="sec-reservas" class="section">
+          <div class="page-header">
+            <h1>Reservas del día</h1>
+            <p>Reservaciones registradas para hoy</p>
+          </div>
+          <div class="card"><div id="reservasTable" class="table-wrap"></div></div>
         </div>
-        <div id="tesoreriaStats" class="stats-grid"></div>
-        <div class="card">
-          <div class="card-title">Pagos pendientes de aprobación</div>
-          <div id="tesoreriaPendientes" class="table-wrap"></div>
-        </div>
-      </div>
 
-      <!-- PAGOS -->
-      <div id="sec-pagos" class="section">
-        <div class="page-header">
-          <h1>Pagos realizados</h1>
-          <p>Historial de transacciones aprobadas</p>
+        <!-- RESULTADOS -->
+        <div id="sec-resultados" class="section">
+          <div class="page-header">
+            <h1>Resultados</h1>
+            <p>Registro de resultados y eventos de partidos</p>
+          </div>
+          <div class="card"><div id="resultadosTable" class="table-wrap"></div></div>
         </div>
-        <div class="mb-md">
-          <div id="pagosFiltro" class="pill-group"></div>
-        </div>
-        <div class="card"><div id="pagosTable" class="table-wrap"></div></div>
-      </div>
 
-    </main>
+        <!-- TESORERIA -->
+        <div id="sec-tesoreria" class="section">
+          <div class="page-header">
+            <h1>Tesorería</h1>
+            <p>Resumen financiero y pagos pendientes</p>
+          </div>
+          <div id="tesoreriaStats" class="dashboard-grid"></div>
+          <div class="card">
+            <div class="card-title">Pagos pendientes de aprobación</div>
+            <div id="tesoreriaPendientes" class="table-wrap"></div>
+          </div>
+        </div>
+
+        <!-- PAGOS -->
+        <div id="sec-pagos" class="section">
+          <div class="page-header">
+            <h1>Pagos realizados</h1>
+            <p>Historial de transacciones aprobadas</p>
+          </div>
+          <div class="mb-md">
+            <div id="pagosFiltro" class="pill-group"></div>
+          </div>
+          <div class="card"><div id="pagosTable" class="table-wrap"></div></div>
+        </div>
+
+      </main>
+    </div>
   </div>
 
   <!-- Modal -->
@@ -134,6 +196,7 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
+  <script src="js/icons.js"></script>
   <script src="js/api.js"></script>
   <script src="js/panel.js"></script>
 </body>
