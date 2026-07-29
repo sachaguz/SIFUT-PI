@@ -14,6 +14,7 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
   const [torneo, setTorneo] = useState(null);
   const [tabla, setTabla] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -30,8 +31,6 @@ export default function OrgTorneoDetalleScreen({ navigation, route }) {
   if (loading || !torneo) {
     return <ScreenContainer><ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /></ScreenContainer>;
   }
-
-  const [generating, setGenerating] = useState(false);
 
   const jornadaPartidos = (torneo.partidos || []).filter((p) => p.fase !== 'LIGUILLA');
   const liguiPartidos = (torneo.partidos || []).filter((p) => p.fase === 'LIGUILLA');
