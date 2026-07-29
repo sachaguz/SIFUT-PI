@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIFUT Admin - Iniciar sesión</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <h1>SIFUT</h1>
+      <p>Panel de Administración</p>
+      <div id="loginError" class="error"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" id="email" placeholder="admin@sifut.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Iniciar sesión</button>
+      </form>
+    </div>
+  </div>
+  <script src="js/api.js"></script>
+  <script>
+    if (api.isAuthenticated()) window.location.href = 'panel.html';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('loginError');
+      btn.disabled = true;
+      btn.textContent = 'Ingresando...';
+      err.style.display = 'none';
+      try {
+        await api.login(
+          document.getElementById('email').value,
+          document.getElementById('password').value
+        );
+        window.location.href = 'panel.html';
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar sesión';
+      }
+    });
+  </script>
+</body>
+</html>
