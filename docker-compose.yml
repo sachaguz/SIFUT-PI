@@ -22,6 +22,8 @@ services:
     build: ./backend
     restart: unless-stopped
     command: node src/server.js
+    ports:
+      - "3000:3000"
     environment:
       DATABASE_URL: postgresql://sifut:sifut_password@db:5432/sifut_db?schema=public
       JWT_SECRET: ${JWT_SECRET:-cambiar-por-un-secreto-seguro-en-produccion}
