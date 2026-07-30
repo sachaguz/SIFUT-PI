@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Alert from '../../services/alert';
 import ScreenContainer from '../../components/ScreenContainer';
 import FormInput from '../../components/FormInput';
 import PillSelector from '../../components/PillSelector';

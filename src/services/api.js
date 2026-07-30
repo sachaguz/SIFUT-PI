@@ -1,13 +1,16 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import storage from './storage';
 
-// IP local de la laptop en la red del celular (cambia esto si cambias de red/hotspot)
-const API_URL = 'http://172.20.10.2:3000/api';
+// En web se sirve detrás del mismo nginx que el API, así que una ruta
+// relativa basta. En nativo seguimos apuntando a la IP local de la laptop
+// en la red del celular (cambia esto si cambias de red/hotspot).
+const API_URL = Platform.OS === 'web' ? '/api' : 'http://172.20.10.2:3000/api';
 
 const api = axios.create({ baseURL: API_URL, timeout: 15000 });
 
 api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('accessToken');
+  const token = await storage.getItemAsync('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -46,18 +49,18 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
+      const refreshToken = await storage.getItemAsync('refreshToken');
       if (!refreshToken) throw new Error('No refresh token');
 
       const { data } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
-      await SecureStore.setItemAsync('accessToken', data.accessToken);
+      await storage.setItemAsync('accessToken', data.accessToken);
       processQueue(null, data.accessToken);
       originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
+      await storage.deleteItemAsync('accessToken');
+      await storage.deleteItemAsync('refreshToken');
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

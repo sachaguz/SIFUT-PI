@@ -104,7 +104,9 @@ services:
 
   # ─── Admin Web Panel ─────────────────────────────────────────────
   admin-panel:
-    build: ./admin-panel
+    build:
+      context: .
+      dockerfile: admin-panel/Dockerfile
     restart: unless-stopped
     networks:
       - backend-net

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Alert from '../../services/alert';
 import ScreenContainer from '../../components/ScreenContainer';
 import Card from '../../components/Card';
 import FormInput from '../../components/FormInput';

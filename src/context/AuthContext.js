@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import storage from '../services/storage';
 import api from '../services/api';
 
 const AuthContext = createContext();
@@ -10,7 +11,7 @@ export function AuthProvider({ children }) {
 
   const loadSession = useCallback(async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
+      const token = await storage.getItemAsync('accessToken');
       if (!token) {
         setLoading(false);
         return;
@@ -18,8 +19,8 @@ export function AuthProvider({ children }) {
       const { data } = await api.get('/auth/profile');
       setUser(data);
     } catch {
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
+      await storage.deleteItemAsync('accessToken');
+      await storage.deleteItemAsync('refreshToken');
     } finally {
       setLoading(false);
     }
@@ -31,8 +32,11 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
-    await SecureStore.setItemAsync('accessToken', data.accessToken);
-    await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+    if (Platform.OS === 'web' && data.user.role !== 'ADMIN') {
+      throw { response: { data: { error: 'Acceso solo para administradores.' } } };
+    }
+    await storage.setItemAsync('accessToken', data.accessToken);
+    await storage.setItemAsync('refreshToken', data.refreshToken);
     setUser(data.user);
     return data.user;
   }, []);
@@ -42,8 +46,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('refreshToken');
+    await storage.deleteItemAsync('accessToken');
+    await storage.deleteItemAsync('refreshToken');
     setUser(null);
   }, []);
 

@@ -1,0 +1,10 @@
+.git
+node_modules
+dist
+.expo
+backend
+infrastructure
+.claude
+android
+ios
+*.log
