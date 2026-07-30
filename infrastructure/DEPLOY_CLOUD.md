@@ -86,8 +86,10 @@ y corre `systemctl restart docker` antes de reintentar.
 
 ```bash
 mkdir -p /var/lib/node_exporter/textfile_collector
-(crontab -l 2>/dev/null; echo "* * * * * root $(pwd)/infrastructure/firewall/export-metrics.sh") | sudo crontab -
+(crontab -l 2>/dev/null; echo "* * * * * $(pwd)/infrastructure/firewall/export-metrics.sh") | sudo crontab -
 ```
+
+(Nota: sin la palabra `root` en la línea - eso solo aplica en `/etc/crontab`, no en el crontab personal de `root` que edita `sudo crontab -`. Con "root" ahí, cron intenta ejecutar un programa llamado `root` y falla en silencio.)
 
 Prometheus ya tiene el scrape job `firewall` apuntando a `node-exporter:9100`,
 y Grafana ya trae el dashboard **SIFUT Firewall Monitoring** provisto en
