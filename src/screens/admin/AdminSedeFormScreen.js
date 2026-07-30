@@ -27,12 +27,23 @@ export default function AdminSedeFormScreen({ navigation, route }) {
       const body = { nombre, direccion, telefono, activa };
       if (sede) {
         await api.put(`/sedes/${sede.id}`, body);
+        Alert.alert('Sede guardada', `${nombre} se guardó correctamente.`, [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
       } else {
-        await api.post('/sedes', body);
+        const { data: nuevaSede } = await api.post('/sedes', body);
+        Alert.alert(
+          'Sede creada',
+          `${nombre} se creó correctamente. Ahora agrega una cancha para poder configurar sus horarios.`,
+          [
+            { text: 'Después', style: 'cancel', onPress: () => navigation.goBack() },
+            {
+              text: 'Agregar cancha',
+              onPress: () => navigation.replace('AdminCanchaForm', { sedeId: nuevaSede.id, sede: nuevaSede.nombre }),
+            },
+          ]
+        );
       }
-      Alert.alert('Sede guardada', `${nombre} se guardó correctamente.`, [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
     } catch (err) {
       Alert.alert('Error', err.response?.data?.error || 'No se pudo guardar la sede.');
     } finally {

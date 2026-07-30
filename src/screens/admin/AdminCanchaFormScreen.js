@@ -44,7 +44,11 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
         await api.post('/canchas', body);
       }
       Alert.alert('Cancha guardada', `${nombre} se guardó en ${sede}.`, [
-        { text: 'OK', onPress: () => navigation.goBack() },
+        // Always land back on the Canchas tab (not goBack(), which after the
+        // new-sede flow's navigation.replace() would land on Sedes instead).
+        // "Canchas" is nested two levels down (AdminStack > AdminTabs > tab),
+        // so it needs the nested-navigator targeting form.
+        { text: 'OK', onPress: () => navigation.navigate('AdminTabs', { screen: 'Canchas' }) },
       ]);
     } catch (err) {
       Alert.alert('Error', err.response?.data?.error || 'No se pudo guardar la cancha.');
