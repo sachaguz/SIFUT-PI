@@ -64,13 +64,23 @@ GRAFANA_PASSWORD=<algo que tú elijas>
 (Puedes correr esos `openssl rand -hex 32` sueltos y pegar el resultado
 en el `.env`.)
 
-## 5. Aplicar el firewall del host y levantar el stack
+## 5. Certificado autofirmado, firewall del host y levantar el stack
+
+`infrastructure/ssl/*.crt` y `*.key` están en `.gitignore` (son
+generados, no viven en el repo) - genera uno antes de levantar nginx o
+se va a quedar reiniciando en loop por no encontrar el certificado:
 
 ```bash
+bash infrastructure/ssl/generate-certs.sh
 sudo bash infrastructure/firewall/iptables-rules.sh
 docker compose up -d --build
-docker compose ps   # todo debe quedar "healthy" / "Up"
+docker compose ps   # todo debe quedar "healthy" / "Up" (nginx incluido, no "Restarting")
 ```
+
+Si Docker no resuelve nombres de dominio durante el build (`npm error`
+con `EAI_AGAIN`), es el problema común de `systemd-resolved` en Ubuntu
+22.04: crea `/etc/docker/daemon.json` con `{"dns": ["8.8.8.8", "1.1.1.1"]}`
+y corre `systemctl restart docker` antes de reintentar.
 
 ## 6. Monitoreo del firewall (opcional pero ya viene listo)
 
@@ -92,7 +102,7 @@ emite un certificado real contra tu IP del droplet.
 ## 8. Verificar todo
 
 - `https://<tu-ip-o-sslip-host>` → panel admin (React Native Web).
-- `https://<tu-ip-o-sslip-host>/api/health` → API pública.
+- `https://<tu-ip-o-sslip-host>/health` → API pública (sin prefijo `/api`, así está expuesto en nginx.conf).
 - `http://<tu-ip>:3002` → Grafana (usuario `admin`, la contraseña que
   pusiste en `.env`), con los dashboards **SIFUT API Monitoring** y
   **SIFUT Firewall Monitoring**.
