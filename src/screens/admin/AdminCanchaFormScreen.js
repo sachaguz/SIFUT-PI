@@ -21,6 +21,7 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
   const [capacidad, setCapacidad] = useState(cancha ? String(cancha.capacidad) : '');
   const [precioHora, setPrecioHora] = useState(cancha?.precioPorHora ? String(Number(cancha.precioPorHora)) : '');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleGuardar = async () => {
     if (!nombre || !capacidad || !precioHora) {
@@ -50,6 +51,27 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEliminar = () => {
+    Alert.alert('Eliminar cancha', `¿Eliminar ${cancha.nombre}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await api.delete(`/canchas/${cancha.id}`);
+            navigation.goBack();
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.error || 'No se pudo eliminar la cancha.');
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -85,6 +107,16 @@ export default function AdminCanchaFormScreen({ navigation, route }) {
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
         <PrimaryButton title="Guardar" onPress={handleGuardar} loading={saving} style={styles.actionBtn} />
       </View>
+
+      {cancha ? (
+        <PrimaryButton
+          title="Eliminar cancha"
+          variant="ghost"
+          onPress={handleEliminar}
+          loading={deleting}
+          style={{ marginTop: spacing.md }}
+        />
+      ) : null}
     </ScreenContainer>
   );
 }

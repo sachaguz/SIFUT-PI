@@ -15,6 +15,7 @@ export default function AdminSedeFormScreen({ navigation, route }) {
   const [telefono, setTelefono] = useState(sede?.telefono || '');
   const [activa, setActiva] = useState(sede?.activa ?? true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleGuardar = async () => {
     if (!nombre || !direccion) {
@@ -37,6 +38,27 @@ export default function AdminSedeFormScreen({ navigation, route }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEliminar = () => {
+    Alert.alert('Eliminar sede', `¿Eliminar ${sede.nombre}? Se perderán sus canchas asociadas.`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await api.delete(`/sedes/${sede.id}`);
+            navigation.goBack();
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.error || 'No se pudo eliminar la sede.');
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -62,6 +84,16 @@ export default function AdminSedeFormScreen({ navigation, route }) {
         <PrimaryButton title="Volver" variant="outline" onPress={() => navigation.goBack()} style={styles.actionBtn} />
         <PrimaryButton title="Guardar" onPress={handleGuardar} loading={saving} style={styles.actionBtn} />
       </View>
+
+      {sede ? (
+        <PrimaryButton
+          title="Eliminar sede"
+          variant="ghost"
+          onPress={handleEliminar}
+          loading={deleting}
+          style={{ marginTop: spacing.md }}
+        />
+      ) : null}
     </ScreenContainer>
   );
 }
