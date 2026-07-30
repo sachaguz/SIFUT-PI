@@ -13,6 +13,7 @@ export default function RegisterScreen({ navigation }) {
     nombres: '',
     apellidoPaterno: '',
     correo: '',
+    telefono: '',
     password: '',
     repitePassword: '',
   });
@@ -46,6 +47,7 @@ export default function RegisterScreen({ navigation }) {
         nombre: form.nombres,
         apellido: form.apellidoPaterno,
         email: form.correo,
+        telefono: form.telefono,
         password: form.password,
       });
       Alert.alert('¡Cuenta creada con éxito!', 'Ya puedes iniciar sesión.', [
@@ -82,6 +84,13 @@ export default function RegisterScreen({ navigation }) {
         keyboardType="email-address"
         value={form.correo}
         onChangeText={update('correo')}
+      />
+      <FormInput
+        label="Teléfono (opcional)"
+        placeholder="442 123 4567"
+        keyboardType="phone-pad"
+        value={form.telefono}
+        onChangeText={update('telefono')}
       />
       <FormInput
         label="Contraseña"

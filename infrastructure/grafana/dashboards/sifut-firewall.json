@@ -1,0 +1,77 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Paquetes bloqueados por regla (acumulado)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sifut_firewall_packets_total{rule=~\".*_block|.*_drop\"}",
+          "legendFormat": "{{rule}}"
+        }
+      ]
+    },
+    {
+      "title": "Paquetes permitidos por regla (acumulado)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sifut_firewall_packets_total{rule=~\".*_allow|.*_accept\"}",
+          "legendFormat": "{{rule}}"
+        }
+      ]
+    },
+    {
+      "title": "Total bloqueado por el firewall (default_drop)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sifut_firewall_packets_total{rule=\"sifut_default_drop\"}",
+          "legendFormat": "Paquetes"
+        }
+      ]
+    },
+    {
+      "title": "Intentos a puertos internos bloqueados (API/Prometheus directo)",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(sifut_firewall_packets_total{rule=~\"sifut_api_block|sifut_api_private_block|sifut_prometheus_block\"})",
+          "legendFormat": "Bloqueados"
+        }
+      ]
+    },
+    {
+      "title": "Paquetes descartados por SYN flood",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [
+        {
+          "expr": "sifut_firewall_packets_total{rule=\"sifut_syn_flood_drop\"}",
+          "legendFormat": "SYN flood"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["sifut", "firewall"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "SIFUT Firewall Monitoring",
+  "uid": "sifut-firewall",
+  "version": 1
+}

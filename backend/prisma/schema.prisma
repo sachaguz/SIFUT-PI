@@ -70,6 +70,10 @@ model User {
   apellido  String
   email     String   @unique
   password  String
+  // Cifrado con AES-256-CBC (crypto.service.js) antes de guardarse - a
+  // diferencia de email/password, un teléfono no se usa para búsquedas
+  // exactas así que puede vivir cifrado en reposo sin perder funcionalidad.
+  telefono  String?
   role      Role     @default(USUARIO)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

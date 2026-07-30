@@ -2,12 +2,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
 const config = require('../config');
+const cryptoService = require('../services/crypto.service');
 
 const SALT_ROUNDS = 12;
+const PROFILE_SELECT = { id: true, nombre: true, apellido: true, email: true, telefono: true, role: true, createdAt: true };
+
+function withDecryptedTelefono(user) {
+  return { ...user, telefono: user.telefono ? cryptoService.decrypt(user.telefono) : null };
+}
 
 async function register(req, res, next) {
   try {
-    const { nombre, apellido, email, password } = req.body;
+    const { nombre, apellido, email, password, telefono } = req.body;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -22,12 +28,13 @@ async function register(req, res, next) {
         apellido,
         email,
         password: hashedPassword,
+        telefono: telefono ? cryptoService.encrypt(telefono) : null,
         role: 'USUARIO',
       },
-      select: { id: true, nombre: true, apellido: true, email: true, role: true, createdAt: true },
+      select: PROFILE_SELECT,
     });
 
-    res.status(201).json(user);
+    res.status(201).json(withDecryptedTelefono(user));
   } catch (err) {
     next(err);
   }
@@ -58,7 +65,9 @@ async function login(req, res, next) {
     });
 
     res.json({
-      user: { id: user.id, nombre: user.nombre, apellido: user.apellido, email: user.email, role: user.role },
+      user: withDecryptedTelefono({
+        id: user.id, nombre: user.nombre, apellido: user.apellido, email: user.email, telefono: user.telefono, role: user.role,
+      }),
       accessToken,
       refreshToken,
     });
@@ -91,12 +100,12 @@ async function getProfile(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, nombre: true, apellido: true, email: true, role: true, createdAt: true },
+      select: PROFILE_SELECT,
     });
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-    res.json(user);
+    res.json(withDecryptedTelefono(user));
   } catch (err) {
     next(err);
   }

@@ -21,35 +21,35 @@ iptables -A OUTPUT -o lo -j ACCEPT
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 # Allow SSH (port 22)
-iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -m comment --comment "sifut_ssh_allow" -j ACCEPT
 
 # Allow HTTP (port 80) - redirects to HTTPS
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -m comment --comment "sifut_http_allow" -j ACCEPT
 
 # Allow HTTPS (port 443) - main entry point
-iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -m comment --comment "sifut_https_allow" -j ACCEPT
 
 # Block direct access to backend ports from outside
 # (3000, 3001 only accessible through nginx within Docker network)
-iptables -A INPUT -p tcp --dport 3000 -j DROP
-iptables -A INPUT -p tcp --dport 3001 -j DROP
+iptables -A INPUT -p tcp --dport 3000 -m comment --comment "sifut_api_block" -j DROP
+iptables -A INPUT -p tcp --dport 3001 -m comment --comment "sifut_api_private_block" -j DROP
 
 # Block direct access to Prometheus (9090) from outside
-iptables -A INPUT -p tcp --dport 9090 -j DROP
+iptables -A INPUT -p tcp --dport 9090 -m comment --comment "sifut_prometheus_block" -j DROP
 
 # Allow Grafana on port 3002 (monitoring dashboard)
-iptables -A INPUT -p tcp --dport 3002 -j ACCEPT
+iptables -A INPUT -p tcp --dport 3002 -m comment --comment "sifut_grafana_allow" -j ACCEPT
 
 # Rate limiting: max 25 new connections/second per IP
-iptables -A INPUT -p tcp --syn -m limit --limit 25/s --limit-burst 50 -j ACCEPT
-iptables -A INPUT -p tcp --syn -j DROP
+iptables -A INPUT -p tcp --syn -m limit --limit 25/s --limit-burst 50 -m comment --comment "sifut_syn_accept" -j ACCEPT
+iptables -A INPUT -p tcp --syn -m comment --comment "sifut_syn_flood_drop" -j DROP
 
 # Drop invalid packets
-iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
+iptables -A INPUT -m conntrack --ctstate INVALID -m comment --comment "sifut_invalid_drop" -j DROP
 
 # Log dropped packets (last 5/min to avoid log flooding)
 iptables -A INPUT -m limit --limit 5/min -j LOG --log-prefix "SIFUT_FIREWALL_DROP: "
-iptables -A INPUT -j DROP
+iptables -A INPUT -m comment --comment "sifut_default_drop" -j DROP
 
 echo "Firewall rules applied successfully"
 echo ""
@@ -63,3 +63,6 @@ echo "Blocked ports:"
 echo "  3000 - Backend API (internal only)"
 echo "  3001 - Backend Private API (internal only)"
 echo "  9090 - Prometheus (internal only)"
+echo ""
+echo "To monitor these rules in Grafana, schedule export-metrics.sh via cron:"
+echo "  * * * * * root $(dirname "$0")/export-metrics.sh"

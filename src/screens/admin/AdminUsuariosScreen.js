@@ -45,7 +45,7 @@ export default function AdminUsuariosScreen({ navigation }) {
             key={usuario.id}
             icon="person-outline"
             title={`${usuario.nombre} ${usuario.apellido}`}
-            subtitle={usuario.email}
+            subtitle={usuario.telefono ? `${usuario.email} · ${usuario.telefono}` : usuario.email}
             meta={`${usuario._count?.reservas ?? 0} reservas`}
             right={<Badge label={usuario.role} tone={ROLE_TONE[usuario.role]} />}
             onPress={() => navigation.navigate('AdminUsuarioForm', { usuario })}

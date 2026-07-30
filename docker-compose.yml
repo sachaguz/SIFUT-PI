@@ -30,7 +30,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       PORT: 3000
       NODE_ENV: production
     depends_on:
@@ -55,7 +55,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       PORT: 3000
       NODE_ENV: production
     depends_on:
@@ -80,7 +80,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar-por-otro-secreto-seguro}
       JWT_EXPIRATION: 15m
       JWT_REFRESH_EXPIRATION: 7d
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       PRIVATE_PORT: 3001
       NODE_ENV: production
     depends_on:
@@ -139,6 +139,22 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=30d'
+    networks:
+      - backend-net
+
+  # ─── Node Exporter (Firewall metrics via textfile collector) ─────
+  # infrastructure/firewall/export-metrics.sh writes iptables' own
+  # packet/byte counters here (cron, on the HOST, since iptables rules
+  # are applied on the host, not inside a container) so Prometheus can
+  # scrape firewall activity alongside the API metrics.
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    volumes:
+      - /var/lib/node_exporter/textfile_collector:/textfile_collector:ro
+    command:
+      - '--collector.textfile.directory=/textfile_collector'
+      - '--web.listen-address=:9100'
     networks:
       - backend-net
 

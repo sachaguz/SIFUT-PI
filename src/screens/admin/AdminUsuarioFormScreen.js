@@ -15,6 +15,7 @@ export default function AdminUsuarioFormScreen({ navigation, route }) {
   const [nombre, setNombre] = useState(usuario?.nombre || '');
   const [apellido, setApellido] = useState(usuario?.apellido || '');
   const [email, setEmail] = useState(usuario?.email || '');
+  const [telefono, setTelefono] = useState(usuario?.telefono || '');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(usuario?.role || 'USUARIO');
   const [saving, setSaving] = useState(false);
@@ -28,9 +29,9 @@ export default function AdminUsuarioFormScreen({ navigation, route }) {
     setSaving(true);
     try {
       if (usuario) {
-        await api.put(`/usuarios/${usuario.id}`, { nombre, apellido, email, role });
+        await api.put(`/usuarios/${usuario.id}`, { nombre, apellido, email, telefono, role });
       } else {
-        await api.post('/usuarios', { nombre, apellido, email, password, role });
+        await api.post('/usuarios', { nombre, apellido, email, telefono, password, role });
       }
       Alert.alert('Usuario guardado', `${nombre} se guardó correctamente.`, [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -76,6 +77,13 @@ export default function AdminUsuarioFormScreen({ navigation, route }) {
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+      />
+      <FormInput
+        label="Teléfono (opcional)"
+        placeholder="442 123 4567"
+        keyboardType="phone-pad"
+        value={telefono}
+        onChangeText={setTelefono}
       />
       {!usuario ? (
         <FormInput
