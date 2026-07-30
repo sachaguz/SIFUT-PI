@@ -33,9 +33,31 @@ export default function UserPagoScreen({ navigation, route }) {
   const [saving, setSaving] = useState(false);
 
   const handlePagar = async () => {
-    if (metodo === 'Tarjeta' && (!numeroTarjeta || !nombreTarjeta || !vencimiento || !cvv)) {
-      Alert.alert('Faltan datos', 'Completa los datos de la tarjeta.');
-      return;
+    if (metodo === 'Tarjeta') {
+      if (!numeroTarjeta || !nombreTarjeta || !vencimiento || !cvv) {
+        Alert.alert('Faltan datos', 'Completa los datos de la tarjeta.');
+        return;
+      }
+      if (numeroTarjeta.replace(/\D/g, '').length !== 16) {
+        Alert.alert('Tarjeta inválida', 'El número de tarjeta debe tener 16 dígitos.');
+        return;
+      }
+      const [mes, anio] = vencimiento.split('/').map((v) => parseInt(v, 10));
+      if (vencimiento.length !== 5 || !mes || mes < 1 || mes > 12 || !anio) {
+        Alert.alert('Vencimiento inválido', 'Ingresa una fecha de vencimiento válida (MM/AA).');
+        return;
+      }
+      const now = new Date();
+      const currentYY = now.getFullYear() % 100;
+      const currentMM = now.getMonth() + 1;
+      if (anio < currentYY || (anio === currentYY && mes < currentMM)) {
+        Alert.alert('Tarjeta vencida', 'La fecha de vencimiento ya pasó.');
+        return;
+      }
+      if (cvv.length < 3) {
+        Alert.alert('CVV inválido', 'El CVV debe tener 3 o 4 dígitos.');
+        return;
+      }
     }
     setSaving(true);
     try {
