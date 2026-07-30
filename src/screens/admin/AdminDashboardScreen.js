@@ -5,11 +5,10 @@ import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
 import Card from '../../components/Card';
 import FormInput from '../../components/FormInput';
-import BarChart from '../../components/BarChart';
+import LineChart from '../../components/LineChart';
 import api, { localDateString } from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
-const METODO_LABELS = { TARJETA: 'Tarjeta', EFECTIVO: 'Efectivo', TRANSFERENCIA: 'Transferencia' };
 const ROL_LABELS = { ADMIN: 'Admin', ORGANIZADOR: 'Organizador', USUARIO: 'Usuario' };
 
 function haceUnMesISO() {
@@ -20,6 +19,33 @@ function haceUnMesISO() {
 
 function hoyISO() {
   return localDateString();
+}
+
+// Dates here are nominal calendar days (no real time-of-day), stored and
+// filtered as UTC midnight on the backend - matching that with UTC getters
+// (rather than local ones) keeps the day-bucketing correct regardless of
+// the viewer's timezone. See localDateString() in api.js for the same
+// reasoning applied to "today" defaults.
+function dayKeyUTC(date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+}
+
+function buildDailySeries(desde, hasta, items, getDate, getValue) {
+  const days = [];
+  const cursor = new Date(`${desde}T00:00:00.000Z`);
+  const end = new Date(`${hasta}T00:00:00.000Z`);
+  while (cursor <= end && days.length < 366) {
+    days.push(new Date(cursor));
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days.map((day) => {
+    const key = dayKeyUTC(day);
+    const value = items
+      .filter((item) => dayKeyUTC(new Date(getDate(item))) === key)
+      .reduce((sum, item) => sum + getValue(item), 0);
+    const label = `${String(day.getUTCDate()).padStart(2, '0')}/${String(day.getUTCMonth() + 1).padStart(2, '0')}`;
+    return { label, value };
+  });
 }
 
 export default function AdminDashboardScreen() {
@@ -61,20 +87,9 @@ export default function AdminDashboardScreen() {
   const torneosActivos = torneos.filter((t) => t.estado === 'ACTIVO').length;
   const ingresoRango = pagos.reduce((sum, p) => sum + Number(p.monto), 0);
 
-  const reservasPorSede = sedes
-    .map((s) => ({
-      label: s.nombre,
-      value: reservas.filter((r) => r.cancha?.sede?.nombre === s.nombre).length,
-    }))
-    .filter((d) => d.value > 0)
-    .sort((a, b) => b.value - a.value);
-
-  const ingresoPorMetodo = Object.keys(METODO_LABELS)
-    .map((key) => ({
-      label: METODO_LABELS[key],
-      value: pagos.filter((p) => p.metodo === key).reduce((sum, p) => sum + Number(p.monto), 0),
-    }))
-    .filter((d) => d.value > 0);
+  const reservasPorDia = buildDailySeries(desde, hasta, reservas, (r) => r.fecha, () => 1);
+  const ingresoPorDia = buildDailySeries(desde, hasta, pagos, (p) => p.fecha, (p) => Number(p.monto));
+  const labelEvery = Math.max(1, Math.ceil(reservasPorDia.length / 8));
 
   const usuariosPorRol = Object.keys(ROL_LABELS)
     .map((key) => ({ label: ROL_LABELS[key], value: usuarios.filter((u) => u.role === key).length }))
@@ -103,18 +118,30 @@ export default function AdminDashboardScreen() {
       ) : (
         <>
           <Card style={styles.chartCard}>
-            <Text style={styles.chartTitle}>Reservas por sede</Text>
-            <BarChart data={reservasPorSede} color={colors.primary} />
+            <Text style={styles.chartTitle}>Reservas por día</Text>
+            <LineChart data={reservasPorDia} color={colors.primary} labelEvery={labelEvery} />
           </Card>
 
           <Card style={styles.chartCard}>
-            <Text style={styles.chartTitle}>Ingreso por método de pago</Text>
-            <BarChart data={ingresoPorMetodo} color={colors.secondary} formatValue={(v) => `$${v.toLocaleString()}`} />
+            <Text style={styles.chartTitle}>Ingreso por día</Text>
+            <LineChart
+              data={ingresoPorDia}
+              color={colors.secondary}
+              formatValue={(v) => `$${v.toLocaleString()}`}
+              labelEvery={labelEvery}
+            />
           </Card>
 
           <Card style={styles.chartCard}>
             <Text style={styles.chartTitle}>Usuarios por rol</Text>
-            <BarChart data={usuariosPorRol} color={colors.accent} />
+            <View style={styles.rolRow}>
+              {usuariosPorRol.map((r) => (
+                <View key={r.label} style={styles.rolItem}>
+                  <Text style={styles.rolValue}>{r.value}</Text>
+                  <Text style={styles.rolLabel}>{r.label}</Text>
+                </View>
+              ))}
+            </View>
           </Card>
         </>
       )}
@@ -161,5 +188,19 @@ const styles = StyleSheet.create({
   chartTitle: {
     ...typography.subtitle,
     marginBottom: spacing.md,
+  },
+  rolRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  rolItem: {
+    alignItems: 'center',
+  },
+  rolValue: {
+    ...typography.displaySmall,
+  },
+  rolLabel: {
+    ...typography.caption,
+    marginTop: spacing.xs,
   },
 });
