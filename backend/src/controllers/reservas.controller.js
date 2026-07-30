@@ -3,11 +3,20 @@ const generateFolio = require('../utils/generateFolio');
 
 async function getAll(req, res, next) {
   try {
+    const { estado, fecha, desde, hasta, sedeId, canchaId } = req.query;
     const where = {};
     if (req.user.role === 'USUARIO') where.userId = req.user.id;
-    if (req.query.estado) where.estado = req.query.estado;
-    if (req.query.fecha) {
-      const date = new Date(req.query.fecha);
+    if (estado) where.estado = estado;
+    if (canchaId) where.canchaId = canchaId;
+    if (sedeId) where.cancha = { sedeId };
+
+    if (desde || hasta) {
+      where.fecha = {
+        ...(desde ? { gte: new Date(new Date(desde).setHours(0, 0, 0, 0)) } : {}),
+        ...(hasta ? { lt: new Date(new Date(hasta).setHours(23, 59, 59, 999)) } : {}),
+      };
+    } else if (fecha) {
+      const date = new Date(fecha);
       where.fecha = {
         gte: new Date(date.setHours(0, 0, 0, 0)),
         lt: new Date(date.setHours(23, 59, 59, 999)),
