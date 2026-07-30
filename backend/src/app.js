@@ -28,6 +28,7 @@ function createApp(options = {}) {
     app.use('/api/equipos', require('./routes/equipos.routes'));
     app.use('/api/jugadores', require('./routes/jugadores.routes'));
     app.use('/api/partidos', require('./routes/partidos.routes'));
+    app.use('/api/usuarios', require('./routes/usuarios.routes'));
     app.use('/api/pagos', require('./routes/pagos.routes'));
     app.use('/api/estadisticas', require('./routes/estadisticas.routes'));
   }
@@ -44,6 +45,7 @@ function createApp(options = {}) {
     app.use('/api/equipos', require('./routes/equipos.routes'));
     app.use('/api/jugadores', require('./routes/jugadores.routes'));
     app.use('/api/partidos', require('./routes/partidos.routes'));
+    app.use('/api/usuarios', require('./routes/usuarios.routes'));
     app.use('/api/pagos', require('./routes/pagos.routes'));
     app.use('/api/estadisticas', require('./routes/estadisticas.routes'));
 

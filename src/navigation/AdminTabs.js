@@ -6,6 +6,7 @@ import AdminCanchasScreen from '../screens/admin/AdminCanchasScreen';
 import AdminReservasScreen from '../screens/admin/AdminReservasScreen';
 import AdminResultadosScreen from '../screens/admin/AdminResultadosScreen';
 import AdminTesoreriaScreen from '../screens/admin/AdminTesoreriaScreen';
+import AdminUsuariosScreen from '../screens/admin/AdminUsuariosScreen';
 import LogoutButton from '../components/LogoutButton';
 import HamburgerButton from './HamburgerButton';
 import AdminSidebar from './AdminSidebar';
@@ -21,7 +22,13 @@ const ICONS = {
   Reservas: 'calendar-outline',
   Resultados: 'stats-chart-outline',
   Tesoreria: 'cash-outline',
+  Usuarios: 'people-outline',
 };
+
+// Bottom tabs only fit the core operational screens on a phone. The web
+// sidebar has room for the rest of the admin CRUD sections, so those are
+// added as web-only tabs (see the `isWeb &&` guards below) instead of
+// cluttering the native tab bar.
 
 function AdminTabNavigator() {
   const tabScreenOptions = useTabScreenOptions();
@@ -43,6 +50,7 @@ function AdminTabNavigator() {
       <Tab.Screen name="Reservas" component={AdminReservasScreen} options={{ title: 'Reservas' }} />
       <Tab.Screen name="Resultados" component={AdminResultadosScreen} options={{ title: 'Resultados' }} />
       <Tab.Screen name="Tesoreria" component={AdminTesoreriaScreen} options={{ title: 'Tesorería' }} />
+      {isWeb && <Tab.Screen name="Usuarios" component={AdminUsuariosScreen} options={{ title: 'Usuarios' }} />}
     </Tab.Navigator>
   );
 }

@@ -112,6 +112,21 @@ const v = {
     body('torneoId').isUUID().withMessage('Torneo inválido'),
     handleValidation,
   ],
+  usuarioCreate: [
+    body('nombre').trim().notEmpty().withMessage('Nombre es requerido'),
+    body('apellido').trim().notEmpty().withMessage('Apellido es requerido'),
+    body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
+    body('password').isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres'),
+    body('role').optional().isIn(['ADMIN', 'ORGANIZADOR', 'USUARIO']).withMessage('Rol inválido'),
+    handleValidation,
+  ],
+  usuarioUpdate: [
+    body('nombre').optional().trim().notEmpty().withMessage('Nombre no puede estar vacío'),
+    body('apellido').optional().trim().notEmpty().withMessage('Apellido no puede estar vacío'),
+    body('email').optional().isEmail().normalizeEmail().withMessage('Email inválido'),
+    body('role').optional().isIn(['ADMIN', 'ORGANIZADOR', 'USUARIO']).withMessage('Rol inválido'),
+    handleValidation,
+  ],
   uuid: [
     param('id').isUUID().withMessage('ID inválido'),
     handleValidation,

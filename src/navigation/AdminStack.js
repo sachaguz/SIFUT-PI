@@ -6,6 +6,7 @@ import AdminHorariosScreen from '../screens/admin/AdminHorariosScreen';
 import AdminRegistroResultadoScreen from '../screens/admin/AdminRegistroResultadoScreen';
 import AdminPagosRealizadosScreen from '../screens/admin/AdminPagosRealizadosScreen';
 import AdminReportesScreen from '../screens/admin/AdminReportesScreen';
+import AdminUsuarioFormScreen from '../screens/admin/AdminUsuarioFormScreen';
 import PartidoDetalleScreen from '../screens/shared/PartidoDetalleScreen';
 import { stackScreenOptions } from './navigationTheme';
 
@@ -30,6 +31,7 @@ export default function AdminStack() {
         options={{ title: 'Pagos realizados' }}
       />
       <Stack.Screen name="AdminReportes" component={AdminReportesScreen} options={{ title: 'Reportes' }} />
+      <Stack.Screen name="AdminUsuarioForm" component={AdminUsuarioFormScreen} options={{ title: 'Usuario' }} />
     </Stack.Navigator>
   );
 }

@@ -7,7 +7,7 @@ const SALT_ROUNDS = 12;
 
 async function register(req, res, next) {
   try {
-    const { nombre, apellido, email, password, role } = req.body;
+    const { nombre, apellido, email, password } = req.body;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -22,7 +22,7 @@ async function register(req, res, next) {
         apellido,
         email,
         password: hashedPassword,
-        role: role || 'USUARIO',
+        role: 'USUARIO',
       },
       select: { id: true, nombre: true, apellido: true, email: true, role: true, createdAt: true },
     });
