@@ -1,6 +1,33 @@
 const prisma = require('../config/database');
 const { avanzarSiCorresponde } = require('../services/liguilla.service');
 
+// Verifies the cancha is actually free at that fecha+hora before
+// scheduling a partido there - checks both other partidos and real
+// customer reservas, since either could already occupy the slot.
+async function verificarCanchaDisponible({ canchaId, fecha, hora, excludePartidoId }) {
+  if (!canchaId) return;
+
+  const [partidoConflicto, reservaConflicto] = await Promise.all([
+    prisma.partido.findFirst({
+      where: {
+        canchaId,
+        fecha,
+        hora,
+        ...(excludePartidoId ? { id: { not: excludePartidoId } } : {}),
+      },
+    }),
+    prisma.reserva.findFirst({
+      where: { canchaId, fecha, horaInicio: hora, estado: { not: 'CANCELADA' } },
+    }),
+  ]);
+
+  if (partidoConflicto || reservaConflicto) {
+    const err = new Error('La cancha ya está ocupada en esa fecha y hora.');
+    err.status = 409;
+    throw err;
+  }
+}
+
 async function getAll(req, res, next) {
   try {
     const where = {};
@@ -50,10 +77,13 @@ async function getById(req, res, next) {
 
 async function create(req, res, next) {
   try {
+    const fecha = new Date(req.body.fecha);
+    await verificarCanchaDisponible({ canchaId: req.body.canchaId, fecha, hora: req.body.hora });
+
     const partido = await prisma.partido.create({
       data: {
         ...req.body,
-        fecha: new Date(req.body.fecha),
+        fecha,
       },
       include: {
         equipoLocal: { select: { id: true, nombre: true } },
@@ -70,6 +100,17 @@ async function update(req, res, next) {
   try {
     const data = { ...req.body };
     if (data.fecha) data.fecha = new Date(data.fecha);
+
+    if (data.canchaId || data.fecha || data.hora) {
+      const actual = await prisma.partido.findUnique({ where: { id: req.params.id } });
+      if (!actual) return res.status(404).json({ error: 'Partido no encontrado' });
+      await verificarCanchaDisponible({
+        canchaId: data.canchaId ?? actual.canchaId,
+        fecha: data.fecha ?? actual.fecha,
+        hora: data.hora ?? actual.hora,
+        excludePartidoId: actual.id,
+      });
+    }
 
     const partido = await prisma.partido.update({
       where: { id: req.params.id },

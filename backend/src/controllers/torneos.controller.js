@@ -35,6 +35,77 @@ function generateMatchDates(fechaInicio, diasJuego, roundsNeeded) {
   return dates;
 }
 
+const HORA_SLOTS = ['17:00', '19:00', '21:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
+
+function mapTorneoTipoACanchaTipo(tipo) {
+  const norm = String(tipo).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '');
+  if (norm.includes('5')) return 'FUTBOL5';
+  if (norm.includes('7')) return 'FUTBOL7';
+  if (norm.includes('11')) return 'FUTBOL11';
+  return null;
+}
+
+// Mutates each fixture with a canchaId + hora, spreading simultaneous
+// matches (same fecha) across the available canchas and, once those run
+// out, across time slots - so two matches never share a cancha at the
+// same date+hora. Also checks real reservas already booked on those
+// canchas so a generated match can't collide with a paying customer.
+async function asignarCanchasDisponibles(fixtures, tipoTorneo) {
+  const tipoCancha = mapTorneoTipoACanchaTipo(tipoTorneo);
+  const canchas = await prisma.cancha.findMany({
+    where: tipoCancha ? { tipo: tipoCancha } : {},
+    orderBy: { id: 'asc' },
+  });
+  if (canchas.length === 0) {
+    const err = new Error('No hay canchas registradas para este tipo de torneo. Registra al menos una cancha antes de generar jornadas.');
+    err.status = 400;
+    throw err;
+  }
+
+  const fechas = fixtures.map((f) => f.fecha.getTime());
+  const minFecha = new Date(Math.min(...fechas));
+  const maxFecha = new Date(Math.max(...fechas));
+
+  const reservasExistentes = await prisma.reserva.findMany({
+    where: {
+      canchaId: { in: canchas.map((c) => c.id) },
+      estado: { not: 'CANCELADA' },
+      fecha: { gte: minFecha, lte: maxFecha },
+    },
+    select: { canchaId: true, fecha: true, horaInicio: true },
+  });
+
+  const ocupado = new Set(
+    reservasExistentes.map((r) => `${r.canchaId}|${r.fecha.toISOString().slice(0, 10)}|${r.horaInicio}`)
+  );
+
+  const porFecha = new Map();
+  fixtures.forEach((f) => {
+    const key = f.fecha.toISOString().slice(0, 10);
+    if (!porFecha.has(key)) porFecha.set(key, []);
+    porFecha.get(key).push(f);
+  });
+
+  const maxSlots = canchas.length * HORA_SLOTS.length;
+  porFecha.forEach((fixturesDelDia, fechaKey) => {
+    let slot = 0;
+    fixturesDelDia.forEach((fixture) => {
+      while (slot < maxSlots * 10) {
+        const cancha = canchas[slot % canchas.length];
+        const hora = HORA_SLOTS[Math.floor(slot / canchas.length) % HORA_SLOTS.length];
+        const key = `${cancha.id}|${fechaKey}|${hora}`;
+        slot++;
+        if (!ocupado.has(key)) {
+          fixture.canchaId = cancha.id;
+          fixture.hora = hora;
+          ocupado.add(key);
+          break;
+        }
+      }
+    });
+  });
+}
+
 async function getAll(req, res, next) {
   try {
     const where = {};
@@ -183,6 +254,8 @@ async function generarJornadas(req, res, next) {
       rotation.push(rotation.shift());
     }
 
+    await asignarCanchasDisponibles(fixtures, torneo.tipo);
+
     const created = await prisma.partido.createMany({ data: fixtures });
 
     const partidos = await prisma.partido.findMany({
@@ -247,6 +320,8 @@ async function generarLiguilla(req, res, next) {
       jornada: nextJornada,
       fase: 'CUARTOS',
     }));
+
+    await asignarCanchasDisponibles(fixtures, torneo.tipo);
 
     await prisma.partido.createMany({ data: fixtures });
 
