@@ -5,8 +5,10 @@
 # half of the firewall requirement, the rules themselves are the
 # "aplicación" half.
 #
-# Run as root (iptables -L needs it) on a schedule, e.g. via cron:
-#   * * * * * root /path/to/export-metrics.sh
+# Run as root (iptables -L needs it) on a schedule, e.g. via root's own
+# crontab (crontab -e as root, or sudo crontab -e - no "root" user field,
+# that's only for /etc/crontab):
+#   * * * * * /path/to/export-metrics.sh
 set -e
 
 OUT_DIR="${TEXTFILE_DIR:-/var/lib/node_exporter/textfile_collector}"
@@ -28,4 +30,5 @@ mkdir -p "$OUT_DIR"
   done
 } > "$TMP_FILE"
 
+chmod 644 "$TMP_FILE"
 mv "$TMP_FILE" "$OUT_FILE"
