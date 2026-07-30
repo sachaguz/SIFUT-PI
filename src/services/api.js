@@ -3,9 +3,10 @@ import { Platform } from 'react-native';
 import storage from './storage';
 
 // En web se sirve detrás del mismo nginx que el API, así que una ruta
-// relativa basta. En nativo seguimos apuntando a la IP local de la laptop
-// en la red del celular (cambia esto si cambias de red/hotspot).
-const API_URL = Platform.OS === 'web' ? '/api' : 'http://172.20.10.2:3000/api';
+// relativa basta. En nativo apunta al backend en producción (nube) -
+// como es un host real de internet (no una IP de LAN), funciona sin
+// importar en qué red esté el teléfono.
+const API_URL = Platform.OS === 'web' ? '/api' : 'https://137-184-17-114.sslip.io/api';
 
 const api = axios.create({ baseURL: API_URL, timeout: 15000 });
 
