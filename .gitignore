@@ -38,6 +38,8 @@ backend/.env
 infrastructure/ssl/*.key
 infrastructure/ssl/*.crt
 infrastructure/ssl/*.pem
+infrastructure/certbot-webroot/
+infrastructure/letsencrypt/
 
 # Docker volumes
 pgdata/
