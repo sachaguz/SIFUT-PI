@@ -4,198 +4,255 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIFUT Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <div class="app-layout">
+  <div class="page">
+
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <h2>SIFut</h2>
-        <span>Panel de Administración</span>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-section">General</div>
-        <a href="#dashboard" data-section="dashboard" class="active">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
-          Dashboard
-        </a>
-        <div class="sidebar-section">Infraestructura</div>
-        <a href="#sedes" data-section="sedes">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-6h6v6"/><path d="M4 9h16"/></svg></span>
-          Sedes
-        </a>
-        <a href="#canchas" data-section="canchas">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M18 18l-3-3M18 6l-3 3M6 18l3-3"/></svg></span>
-          Canchas
-        </a>
-        <a href="#horarios" data-section="horarios">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
-          Horarios
-        </a>
-        <div class="sidebar-section">Operación</div>
-        <a href="#reservas" data-section="reservas">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h3M8 17h6"/></svg></span>
-          Reservas
-        </a>
-        <a href="#resultados" data-section="resultados">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M6 3h12v5a6 6 0 0 1-12 0V3z"/><path d="M6 5H3v2a4 4 0 0 0 3 3.87M18 5h3v2a4 4 0 0 1-3 3.87"/></svg></span>
-          Resultados
-        </a>
-        <div class="sidebar-section">Finanzas</div>
-        <a href="#tesoreria" data-section="tesoreria">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><circle cx="16.5" cy="14.5" r="1.5"/></svg></span>
-          Tesorería
-        </a>
-        <a href="#pagos" data-section="pagos">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
-          Pagos realizados
-        </a>
-      </nav>
-      <div class="sidebar-footer">
-        <div class="user-info" id="userInfo"></div>
-        <button class="btn-logout" onclick="api.logout()">Cerrar sesión</button>
+    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <h1 class="navbar-brand">
+          <a href="#dashboard" class="brand-title text-reset text-decoration-none">SIFut</a>
+        </h1>
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+          <ul class="navbar-nav pt-lg-3">
+            <li class="nav-item"><span class="nav-section-title">General</span></li>
+            <li class="nav-item">
+              <a class="nav-link active" data-section="dashboard" href="#dashboard">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+                <span class="nav-link-title">Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item"><span class="nav-section-title">Infraestructura</span></li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="sedes" href="#sedes">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M9 21v-6h6v6"/><path d="M4 9h16"/></svg></span>
+                <span class="nav-link-title">Sedes</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="canchas" href="#canchas">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M18 18l-3-3M18 6l-3 3M6 18l3-3"/></svg></span>
+                <span class="nav-link-title">Canchas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="horarios" href="#horarios">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+                <span class="nav-link-title">Horarios</span>
+              </a>
+            </li>
+            <li class="nav-item"><span class="nav-section-title">Operación</span></li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="reservas" href="#reservas">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 13h3M8 17h6"/></svg></span>
+                <span class="nav-link-title">Reservas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="resultados" href="#resultados">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M6 3h12v5a6 6 0 0 1-12 0V3z"/><path d="M6 5H3v2a4 4 0 0 0 3 3.87M18 5h3v2a4 4 0 0 1-3 3.87"/></svg></span>
+                <span class="nav-link-title">Resultados</span>
+              </a>
+            </li>
+            <li class="nav-item"><span class="nav-section-title">Finanzas</span></li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="tesoreria" href="#tesoreria">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><circle cx="16.5" cy="14.5" r="1.5"/></svg></span>
+                <span class="nav-link-title">Tesorería</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" data-section="pagos" href="#pagos">
+                <span class="nav-link-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span>
+                <span class="nav-link-title">Pagos realizados</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </aside>
 
-    <div class="content-area">
+    <div class="page-wrapper">
+
       <!-- Topbar -->
-      <header class="topbar">
-        <div class="topbar-search">
-          <span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
-          <input type="text" id="topbarSearch" placeholder="Buscar una sección… (Enter)">
-        </div>
-        <div class="topbar-user">
-          <div class="who">
-            <div class="name" id="userName"></div>
-            <div class="role">Administrador</div>
+      <header class="navbar navbar-expand-md navbar-light d-print-none">
+        <div class="container-xl">
+          <div class="d-flex flex-fill">
+            <div class="input-icon w-100" style="max-width: 320px;">
+              <span class="input-icon-addon">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              </span>
+              <input type="text" id="topbarSearch" class="form-control" placeholder="Buscar una sección… (Enter)">
+            </div>
           </div>
-          <div class="avatar" id="userAvatar"></div>
+          <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item dropdown">
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
+                <span class="avatar avatar-sm bg-primary-lt" id="userAvatar"></span>
+                <div class="d-none d-xl-block ps-2">
+                  <div id="userName"></div>
+                  <div class="mt-1 small text-secondary">Administrador</div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <a href="#" class="dropdown-item" onclick="api.logout()">Cerrar sesión</a>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      <!-- Main content -->
-      <main class="main-content">
+      <div class="page-body">
+        <div class="container-xl">
 
-        <!-- DASHBOARD -->
-        <div id="sec-dashboard" class="section active">
-          <div class="page-header">
-            <h1>Dashboard</h1>
-            <p>Resumen general del sistema</p>
-          </div>
-          <div id="dashboardKpis" class="dashboard-grid"></div>
-          <div class="charts-row">
-            <div class="card chart-card">
-              <div class="card-title">Canchas por sede</div>
-              <div id="dashboardBarChart"></div>
+          <!-- DASHBOARD -->
+          <div id="sec-dashboard" class="app-section active">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Dashboard</h2><div class="text-secondary mt-1">Resumen general del sistema</div></div>
+              </div>
             </div>
-            <div class="card chart-card">
-              <div class="card-title">Pagos por método</div>
-              <div id="dashboardDonutChart"></div>
+            <div class="row row-deck row-cards mb-3" id="dashboardKpis"></div>
+            <div class="row row-deck row-cards">
+              <div class="col-lg-7">
+                <div class="card">
+                  <div class="card-header"><h3 class="card-title">Canchas por sede</h3></div>
+                  <div class="card-body" id="dashboardBarChart"></div>
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="card">
+                  <div class="card-header"><h3 class="card-title">Pagos por método</h3></div>
+                  <div class="card-body" id="dashboardDonutChart"></div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- SEDES -->
-        <div id="sec-sedes" class="section">
-          <div class="page-header flex-between">
-            <div>
-              <h1>Sedes</h1>
-              <p>Administra las sucursales del sistema</p>
+          <!-- SEDES -->
+          <div id="sec-sedes" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Sedes</h2><div class="text-secondary mt-1">Administra las sucursales del sistema</div></div>
+                <div class="col-auto"><button class="btn btn-primary" onclick="openSedeForm()">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Nueva sede</button></div>
+              </div>
             </div>
-            <button class="btn btn-primary" onclick="openSedeForm()"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Nueva sede</button>
+            <div class="card"><div id="sedesTable" class="table-responsive"></div></div>
           </div>
-          <div class="card"><div id="sedesTable" class="table-wrap"></div></div>
-        </div>
 
-        <!-- CANCHAS -->
-        <div id="sec-canchas" class="section">
-          <div class="page-header flex-between">
-            <div>
-              <h1>Canchas</h1>
-              <p>Gestión de canchas por sede</p>
+          <!-- CANCHAS -->
+          <div id="sec-canchas" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Canchas</h2><div class="text-secondary mt-1">Gestión de canchas por sede</div></div>
+                <div class="col-auto"><button class="btn btn-primary" onclick="openCanchaForm()">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Nueva cancha</button></div>
+              </div>
             </div>
-            <button class="btn btn-primary" onclick="openCanchaForm()"><span class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> Nueva cancha</button>
+            <div class="mb-3">
+              <div class="form-label text-uppercase small">Filtrar por sede</div>
+              <div id="canchasSedePills" class="btn-group flex-wrap" role="group"></div>
+            </div>
+            <div class="card"><div id="canchasTable" class="table-responsive"></div></div>
           </div>
-          <div class="mb-md">
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Filtrar por sede</label>
-            <div id="canchasSedePills" class="pill-group mt-sm"></div>
-          </div>
-          <div class="card"><div id="canchasTable" class="table-wrap"></div></div>
-        </div>
 
-        <!-- HORARIOS -->
-        <div id="sec-horarios" class="section">
-          <div class="page-header">
-            <h1>Horarios</h1>
-            <p>Horarios de disponibilidad por sede</p>
+          <!-- HORARIOS -->
+          <div id="sec-horarios" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Horarios</h2><div class="text-secondary mt-1">Horarios de disponibilidad por sede</div></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-label text-uppercase small">Sede</div>
+              <div id="horariosSedePills" class="btn-group flex-wrap" role="group"></div>
+            </div>
+            <div class="mb-3">
+              <div class="form-label text-uppercase small">Día</div>
+              <div id="horariosDiaPills" class="btn-group flex-wrap" role="group"></div>
+            </div>
+            <div class="card"><div id="horariosTable" class="table-responsive"></div></div>
           </div>
-          <div class="mb-md">
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Sede</label>
-            <div id="horariosSedePills" class="pill-group mt-sm"></div>
-          </div>
-          <div class="mb-md">
-            <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px">Día</label>
-            <div id="horariosDiaPills" class="pill-group mt-sm"></div>
-          </div>
-          <div class="card"><div id="horariosTable" class="table-wrap"></div></div>
-        </div>
 
-        <!-- RESERVAS -->
-        <div id="sec-reservas" class="section">
-          <div class="page-header">
-            <h1>Reservas del día</h1>
-            <p>Reservaciones registradas para hoy</p>
+          <!-- RESERVAS -->
+          <div id="sec-reservas" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Reservas del día</h2><div class="text-secondary mt-1">Reservaciones registradas para hoy</div></div>
+              </div>
+            </div>
+            <div class="card"><div id="reservasTable" class="table-responsive"></div></div>
           </div>
-          <div class="card"><div id="reservasTable" class="table-wrap"></div></div>
-        </div>
 
-        <!-- RESULTADOS -->
-        <div id="sec-resultados" class="section">
-          <div class="page-header">
-            <h1>Resultados</h1>
-            <p>Registro de resultados y eventos de partidos</p>
+          <!-- RESULTADOS -->
+          <div id="sec-resultados" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Resultados</h2><div class="text-secondary mt-1">Registro de resultados y eventos de partidos</div></div>
+              </div>
+            </div>
+            <div class="card"><div id="resultadosTable" class="table-responsive"></div></div>
           </div>
-          <div class="card"><div id="resultadosTable" class="table-wrap"></div></div>
-        </div>
 
-        <!-- TESORERIA -->
-        <div id="sec-tesoreria" class="section">
-          <div class="page-header">
-            <h1>Tesorería</h1>
-            <p>Resumen financiero y pagos pendientes</p>
+          <!-- TESORERIA -->
+          <div id="sec-tesoreria" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Tesorería</h2><div class="text-secondary mt-1">Resumen financiero y pagos pendientes</div></div>
+              </div>
+            </div>
+            <div class="row row-deck row-cards mb-3" id="tesoreriaStats"></div>
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Pagos pendientes de aprobación</h3></div>
+              <div id="tesoreriaPendientes" class="table-responsive"></div>
+            </div>
           </div>
-          <div id="tesoreriaStats" class="dashboard-grid"></div>
-          <div class="card">
-            <div class="card-title">Pagos pendientes de aprobación</div>
-            <div id="tesoreriaPendientes" class="table-wrap"></div>
-          </div>
-        </div>
 
-        <!-- PAGOS -->
-        <div id="sec-pagos" class="section">
-          <div class="page-header">
-            <h1>Pagos realizados</h1>
-            <p>Historial de transacciones aprobadas</p>
+          <!-- PAGOS -->
+          <div id="sec-pagos" class="app-section">
+            <div class="page-header d-print-none">
+              <div class="row align-items-center">
+                <div class="col"><h2 class="page-title">Pagos realizados</h2><div class="text-secondary mt-1">Historial de transacciones aprobadas</div></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div id="pagosFiltro" class="btn-group flex-wrap" role="group"></div>
+            </div>
+            <div class="card"><div id="pagosTable" class="table-responsive"></div></div>
           </div>
-          <div class="mb-md">
-            <div id="pagosFiltro" class="pill-group"></div>
-          </div>
-          <div class="card"><div id="pagosTable" class="table-wrap"></div></div>
-        </div>
 
-      </main>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Modal -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal" id="modalContent"></div>
+  <div class="modal modal-blur fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" id="modalContent"></div>
+    </div>
   </div>
 
   <!-- Toast -->
-  <div class="toast" id="toast"></div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="toast" class="toast align-items-center border-0">
+      <div class="d-flex">
+        <div class="toast-body" id="toastBody"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="hideToast()"></button>
+      </div>
+    </div>
+  </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
   <script src="js/icons.js"></script>
   <script src="js/api.js"></script>
   <script src="js/panel.js"></script>

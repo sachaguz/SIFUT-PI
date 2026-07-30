@@ -5,10 +5,30 @@ const FASES_ELIMINATORIA = ['CUARTOS', 'SEMIFINAL', 'FINAL'];
 const CHART_COLORS = ['#1E5B3A', '#28456B', '#C4801F', '#B3412C', '#6B7A0E', '#8A6FB0'];
 
 // ─── Topbar user info ───────────────────────────────────────────────
-document.getElementById('userInfo').textContent = `${api.user.nombre} ${api.user.apellido}`;
 const initials = `${(api.user.nombre || '?')[0] || ''}${(api.user.apellido || '')[0] || ''}`.toUpperCase();
 document.getElementById('userAvatar').textContent = initials;
 document.getElementById('userName').textContent = `${api.user.nombre} ${api.user.apellido}`;
+
+// ─── Modal & Toast (Bootstrap components) ───────────────────────────
+const bsModal = new bootstrap.Modal(document.getElementById('modal'));
+const bsToast = new bootstrap.Toast(document.getElementById('toast'), { delay: 3000 });
+
+function openModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  bsModal.show();
+}
+
+function closeModal() { bsModal.hide(); }
+
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  document.getElementById('toastBody').textContent = msg;
+  el.classList.toggle('bg-danger', !!isError);
+  el.classList.toggle('text-white', !!isError);
+  bsToast.show();
+}
+
+function hideToast() { bsToast.hide(); }
 
 // ─── Helpers ───────────────────────────────────────────────────────
 function formatDate(iso) {
@@ -41,37 +61,28 @@ function estadoLabel(e) {
 
 function estadoBadge(estado) {
   const tones = { ACTIVO:'success', FINALIZADO:'success', CONFIRMADA:'success', APROBADO:'success',
-    PENDIENTE:'warning', EN_CURSO:'warning', PROXIMO:'neutral', COMPLETADA:'neutral',
+    PENDIENTE:'warning', EN_CURSO:'warning', PROXIMO:'secondary', COMPLETADA:'secondary',
     CANCELADA:'danger', RECHAZADO:'danger' };
-  return `<span class="badge badge-${tones[estado]||'neutral'}">${estadoLabel(estado)}</span>`;
+  return `<span class="badge bg-${tones[estado]||'secondary'}-lt">${estadoLabel(estado)}</span>`;
 }
 
 function emptyState(iconName, text) {
-  return `<div class="empty-state"><span class="icon-badge">${ICONS[iconName] || ICONS.info}</span><p>${text}</p></div>`;
+  return `<div class="empty">
+    <div class="empty-icon">${ICONS[iconName] || ICONS.info}</div>
+    <p class="empty-title">${text}</p>
+  </div>`;
 }
 
-function toast(msg, isError) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => el.className = 'toast', 3000);
+function loadingSpinner() {
+  return '<div class="d-flex justify-content-center p-5"><div class="spinner-border text-primary" role="status"></div></div>';
 }
-
-function openModal(html) {
-  document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('modal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-document.getElementById('modal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('modal')) closeModal();
-});
 
 function enc(obj) { return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }
 function dec(str) { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+
+function pill(label, active, onclick) {
+  return `<button type="button" class="btn btn-sm rounded-pill ${active ? 'btn-primary' : 'btn-outline-secondary'}" onclick="${onclick}">${label}</button>`;
+}
 
 // ─── Simple charts (vanilla SVG, no dependencies) ───────────────────
 function renderBarChart(container, data) {
@@ -128,8 +139,25 @@ function renderDonutChart(container, data) {
   `;
 }
 
+function kpiCard(iconName, tone, value, label, sub) {
+  return `<div class="col-sm-6 col-lg-3">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          <span class="avatar avatar-rounded bg-${tone}-lt me-3">${ICONS[iconName]}</span>
+          <div>
+            <div class="text-uppercase text-secondary small fw-bold">${label}</div>
+            <div class="fs-2 fw-bold lh-1">${value}</div>
+            ${sub ? `<div class="text-secondary small mt-1">${sub}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 // ─── Navigation ────────────────────────────────────────────────────
-const navLinks = document.querySelectorAll('.sidebar-nav a');
+const navLinks = document.querySelectorAll('.navbar-nav a[data-section]');
 let currentSection = 'dashboard';
 
 function goToSection(sec) {
@@ -141,6 +169,11 @@ function goToSection(sec) {
   document.getElementById(`sec-${sec}`).classList.add('active');
   currentSection = sec;
   loaders[sec]();
+
+  const collapse = document.getElementById('sidebar-menu');
+  if (collapse.classList.contains('show')) {
+    bootstrap.Collapse.getOrCreateInstance(collapse).hide();
+  }
 }
 
 navLinks.forEach((link) => {
@@ -170,9 +203,9 @@ async function loadDashboard() {
   const kpisEl = document.getElementById('dashboardKpis');
   const barEl = document.getElementById('dashboardBarChart');
   const donutEl = document.getElementById('dashboardDonutChart');
-  kpisEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-  barEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
-  donutEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  kpisEl.innerHTML = loadingSpinner();
+  barEl.innerHTML = loadingSpinner();
+  donutEl.innerHTML = loadingSpinner();
 
   try {
     const today = new Date().toISOString().substring(0, 10);
@@ -187,38 +220,12 @@ async function loadDashboard() {
     sedesCache = sedes;
     const sedesActivas = sedes.filter((s) => s.activa).length;
 
-    kpisEl.innerHTML = `
-      <div class="kpi-card">
-        <div class="kpi-icon tone-primary"><span class="icon-badge">${ICONS.sedes}</span></div>
-        <div class="kpi-body">
-          <div class="kpi-value">${sedesActivas}</div>
-          <div class="kpi-label">Sedes activas</div>
-          <div class="kpi-sub">${sedes.length} en total</div>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-accent"><span class="icon-badge">${ICONS.canchas}</span></div>
-        <div class="kpi-body">
-          <div class="kpi-value">${canchas.length}</div>
-          <div class="kpi-label">Canchas totales</div>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-secondary"><span class="icon-badge">${ICONS.reservas}</span></div>
-        <div class="kpi-body">
-          <div class="kpi-value">${reservasHoy.length}</div>
-          <div class="kpi-label">Reservas hoy</div>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-warning"><span class="icon-badge">${ICONS.wallet}</span></div>
-        <div class="kpi-body">
-          <div class="kpi-value">$${formatMoney(resumen.ingresoMensual.total)}</div>
-          <div class="kpi-label">Ingresos del mes</div>
-          <div class="kpi-sub">${resumen.ingresoMensual.cantidad} pagos aprobados</div>
-        </div>
-      </div>
-    `;
+    kpisEl.innerHTML = [
+      kpiCard('sedes', 'primary', sedesActivas, 'Sedes activas', `${sedes.length} en total`),
+      kpiCard('canchas', 'lime', canchas.length, 'Canchas totales'),
+      kpiCard('reservas', 'azure', reservasHoy.length, 'Reservas hoy'),
+      kpiCard('wallet', 'warning', `$${formatMoney(resumen.ingresoMensual.total)}`, 'Ingresos del mes', `${resumen.ingresoMensual.cantidad} pagos aprobados`),
+    ].join('');
 
     const porSede = sedes.map((s) => ({
       label: s.nombre.replace('Sede ', ''),
@@ -244,23 +251,26 @@ let sedesCache = [];
 
 async function loadSedes() {
   const el = document.getElementById('sedesTable');
-  el.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  el.innerHTML = loadingSpinner();
   try {
     sedesCache = await api.get('/sedes');
     if (sedesCache.length === 0) {
       el.innerHTML = emptyState('sedes', 'No hay sedes registradas.');
       return;
     }
-    el.innerHTML = `<table><thead><tr>
-      <th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
+    el.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
+      <th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Estado</th><th class="w-1"></th>
     </tr></thead><tbody>${sedesCache.map(s => `<tr>
       <td><strong>${s.nombre}</strong></td>
       <td>${s.direccion}</td>
       <td>${s.telefono}</td>
-      <td>${s.activa ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-neutral">Inactiva</span>'}</td>
-      <td class="actions-cell">
-          <button class="btn btn-outline btn-sm" onclick="openSedeForm('${s.id}')"><span class="icon-badge">${ICONS.edit}</span> Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSede('${s.id}')"><span class="icon-badge">${ICONS.trash}</span></button></td>
+      <td>${s.activa ? '<span class="badge bg-success-lt">Activa</span>' : '<span class="badge bg-secondary-lt">Inactiva</span>'}</td>
+      <td class="text-end">
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-icon btn-sm" onclick="openSedeForm('${s.id}')" title="Editar">${ICONS.edit}</button>
+          <button class="btn btn-icon btn-sm text-danger" onclick="deleteSede('${s.id}')" title="Eliminar">${ICONS.trash}</button>
+        </div>
+      </td>
     </tr>`).join('')}</tbody></table>`;
   } catch (err) { toast(err.message, true); }
 }
@@ -268,12 +278,15 @@ async function loadSedes() {
 function openSedeForm(id) {
   const sede = id ? sedesCache.find(s => s.id === id) : null;
   openModal(`
-    <h2>${sede ? 'Editar sede' : 'Nueva sede'}</h2>
-    <div class="form-group"><label>Nombre</label><input id="fNombre" value="${sede?.nombre||''}"></div>
-    <div class="form-group"><label>Dirección</label><input id="fDireccion" value="${sede?.direccion||''}"></div>
-    <div class="form-group"><label>Teléfono</label><input id="fTelefono" value="${sede?.telefono||''}"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    <div class="modal-header"><h5 class="modal-title">${sede ? 'Editar sede' : 'Nueva sede'}</h5>
+      <button type="button" class="btn-close" onclick="closeModal()"></button></div>
+    <div class="modal-body">
+      <div class="mb-3"><label class="form-label">Nombre</label><input class="form-control" id="fNombre" value="${sede?.nombre||''}"></div>
+      <div class="mb-3"><label class="form-label">Dirección</label><input class="form-control" id="fDireccion" value="${sede?.direccion||''}"></div>
+      <div class="mb-3"><label class="form-label">Teléfono</label><input class="form-control" id="fTelefono" value="${sede?.telefono||''}"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-link link-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveSede('${id||''}')">Guardar</button>
     </div>
   `);
@@ -316,30 +329,31 @@ async function loadCanchas() {
     if (reqId !== canchasReqId) return;
     if (!canchasSedeId && sedesCache.length > 0) canchasSedeId = sedesCache[0].id;
 
-    pillsEl.innerHTML = sedesCache.map(s =>
-      `<button class="pill ${s.id===canchasSedeId?'active':''}" onclick="selectCanchaSede('${s.id}')">${s.nombre}</button>`
-    ).join('');
+    pillsEl.innerHTML = sedesCache.map(s => pill(s.nombre, s.id === canchasSedeId, `selectCanchaSede('${s.id}')`)).join('');
 
     if (!canchasSedeId) { tableEl.innerHTML = emptyState('sedes', 'Selecciona una sede.'); return; }
 
-    tableEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    tableEl.innerHTML = loadingSpinner();
     const canchas = await api.get(`/canchas?sedeId=${canchasSedeId}`);
     if (reqId !== canchasReqId) return;
     if (canchas.length === 0) {
       tableEl.innerHTML = emptyState('canchas', 'No hay canchas en esta sede.');
       return;
     }
-    tableEl.innerHTML = `<table><thead><tr>
-      <th>Nombre</th><th>Tipo</th><th>Superficie</th><th>Capacidad</th><th>Precio/hora</th><th>Acciones</th>
+    tableEl.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
+      <th>Nombre</th><th>Tipo</th><th>Superficie</th><th>Capacidad</th><th>Precio/hora</th><th class="w-1"></th>
     </tr></thead><tbody>${canchas.map(c => `<tr>
       <td><strong>${c.nombre}</strong></td>
       <td>${tipoLabel(c.tipo)}</td>
       <td>${c.superficie}</td>
       <td>${c.capacidad}</td>
       <td>$${formatMoney(c.precioPorHora)}</td>
-      <td class="actions-cell">
-          <button class="btn btn-outline btn-sm" onclick="openCanchaForm('${c.id}','${enc(c)}')"><span class="icon-badge">${ICONS.edit}</span> Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteCancha('${c.id}')"><span class="icon-badge">${ICONS.trash}</span></button></td>
+      <td class="text-end">
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-icon btn-sm" onclick="openCanchaForm('${c.id}','${enc(c)}')" title="Editar">${ICONS.edit}</button>
+          <button class="btn btn-icon btn-sm text-danger" onclick="deleteCancha('${c.id}')" title="Eliminar">${ICONS.trash}</button>
+        </div>
+      </td>
     </tr>`).join('')}</tbody></table>`;
   } catch (err) { if (reqId === canchasReqId) toast(err.message, true); }
 }
@@ -350,21 +364,24 @@ function openCanchaForm(id, encoded) {
   const cancha = encoded ? dec(encoded) : null;
   const tipos = ['FUTBOL5','FUTBOL7','FUTBOL11'];
   openModal(`
-    <h2>${cancha ? 'Editar cancha' : 'Nueva cancha'}</h2>
-    <div class="form-group"><label>Sede</label>
-      <select id="fSedeId">${sedesCache.map(s => `<option value="${s.id}" ${s.id===(cancha?.sedeId||canchasSedeId)?'selected':''}>${s.nombre}</option>`).join('')}</select>
+    <div class="modal-header"><h5 class="modal-title">${cancha ? 'Editar cancha' : 'Nueva cancha'}</h5>
+      <button type="button" class="btn-close" onclick="closeModal()"></button></div>
+    <div class="modal-body">
+      <div class="mb-3"><label class="form-label">Sede</label>
+        <select class="form-select" id="fSedeId">${sedesCache.map(s => `<option value="${s.id}" ${s.id===(cancha?.sedeId||canchasSedeId)?'selected':''}>${s.nombre}</option>`).join('')}</select>
+      </div>
+      <div class="mb-3"><label class="form-label">Nombre</label><input class="form-control" id="fNombre" value="${cancha?.nombre||''}"></div>
+      <div class="mb-3"><label class="form-label">Tipo</label>
+        <select class="form-select" id="fTipo">${tipos.map(t => `<option value="${t}" ${t===cancha?.tipo?'selected':''}>${tipoLabel(t)}</option>`).join('')}</select>
+      </div>
+      <div class="row g-2">
+        <div class="col mb-3"><label class="form-label">Superficie</label><input class="form-control" id="fSuperficie" value="${cancha?.superficie||'Pasto sintético'}"></div>
+        <div class="col mb-3"><label class="form-label">Capacidad</label><input class="form-control" type="number" id="fCapacidad" value="${cancha?.capacidad||10}"></div>
+      </div>
+      <div class="mb-3"><label class="form-label">Precio por hora</label><input class="form-control" type="number" step="0.01" id="fPrecio" value="${cancha?Number(cancha.precioPorHora):'450'}"></div>
     </div>
-    <div class="form-group"><label>Nombre</label><input id="fNombre" value="${cancha?.nombre||''}"></div>
-    <div class="form-group"><label>Tipo</label>
-      <select id="fTipo">${tipos.map(t => `<option value="${t}" ${t===cancha?.tipo?'selected':''}>${tipoLabel(t)}</option>`).join('')}</select>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Superficie</label><input id="fSuperficie" value="${cancha?.superficie||'Pasto sintético'}"></div>
-      <div class="form-group"><label>Capacidad</label><input id="fCapacidad" type="number" value="${cancha?.capacidad||10}"></div>
-    </div>
-    <div class="form-group"><label>Precio por hora</label><input id="fPrecio" type="number" step="0.01" value="${cancha?Number(cancha.precioPorHora):'450'}"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    <div class="modal-footer">
+      <button class="btn btn-link link-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveCancha('${id||''}')">Guardar</button>
     </div>
   `);
@@ -408,18 +425,14 @@ async function loadHorarios() {
     if (reqId !== horariosReqId) return;
     if (!horariosSedeId && sedesCache.length > 0) horariosSedeId = sedesCache[0].id;
 
-    sedePills.innerHTML = sedesCache.map(s =>
-      `<button class="pill ${s.id===horariosSedeId?'active':''}" onclick="selectHorarioSede('${s.id}')">${s.nombre}</button>`
-    ).join('');
+    sedePills.innerHTML = sedesCache.map(s => pill(s.nombre, s.id === horariosSedeId, `selectHorarioSede('${s.id}')`)).join('');
 
     const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-    diaPills.innerHTML = dayNames.map((d,i) =>
-      `<button class="pill ${i===horariosDia?'active':''}" onclick="selectHorarioDia(${i})">${d}</button>`
-    ).join('');
+    diaPills.innerHTML = dayNames.map((d,i) => pill(d, i === horariosDia, `selectHorarioDia(${i})`)).join('');
 
     if (!horariosSedeId) { tableEl.innerHTML = ''; return; }
 
-    tableEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    tableEl.innerHTML = loadingSpinner();
     const horarios = await api.get(`/horarios/sede/${horariosSedeId}`);
     if (reqId !== horariosReqId) return;
     const filtered = horarios.filter(h => h.diaSemana === horariosDia);
@@ -427,14 +440,14 @@ async function loadHorarios() {
       tableEl.innerHTML = emptyState('horarios', 'No hay horarios para este día.');
       return;
     }
-    tableEl.innerHTML = `<table><thead><tr>
-      <th>Cancha</th><th>Hora inicio</th><th>Hora fin</th><th>Estado</th><th>Acciones</th>
+    tableEl.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
+      <th>Cancha</th><th>Hora inicio</th><th>Hora fin</th><th>Estado</th><th class="w-1"></th>
     </tr></thead><tbody>${filtered.map(h => `<tr>
       <td>${h.cancha?.nombre||''}</td>
       <td>${h.horaInicio}</td>
       <td>${h.horaFin}</td>
-      <td>${h.disponible ? '<span class="badge badge-success">Disponible</span>' : '<span class="badge badge-danger">No disponible</span>'}</td>
-      <td><button class="btn btn-outline btn-sm" onclick="toggleHorarioDisponible('${h.id}', ${h.disponible})">
+      <td>${h.disponible ? '<span class="badge bg-success-lt">Disponible</span>' : '<span class="badge bg-danger-lt">No disponible</span>'}</td>
+      <td class="text-end"><button class="btn btn-outline-secondary btn-sm" onclick="toggleHorarioDisponible('${h.id}', ${h.disponible})">
           ${h.disponible ? 'Bloquear' : 'Habilitar'}</button></td>
     </tr>`).join('')}</tbody></table>`;
   } catch (err) { if (reqId === horariosReqId) toast(err.message, true); }
@@ -454,7 +467,7 @@ async function toggleHorarioDisponible(id, current) {
 // ─── RESERVAS ──────────────────────────────────────────────────────
 async function loadReservas() {
   const el = document.getElementById('reservasTable');
-  el.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  el.innerHTML = loadingSpinner();
   try {
     const today = new Date().toISOString().substring(0,10);
     const reservas = await api.get(`/reservas?fecha=${today}`);
@@ -462,7 +475,7 @@ async function loadReservas() {
       el.innerHTML = emptyState('reservas', 'No hay reservas para hoy.');
       return;
     }
-    el.innerHTML = `<table><thead><tr>
+    el.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
       <th>Folio</th><th>Usuario</th><th>Sede</th><th>Cancha</th><th>Horario</th><th>Total</th><th>Estado</th>
     </tr></thead><tbody>${reservas.map(r => `<tr>
       <td><strong>${r.folio}</strong></td>
@@ -479,15 +492,15 @@ async function loadReservas() {
 // ─── RESULTADOS ────────────────────────────────────────────────────
 async function loadResultados() {
   const el = document.getElementById('resultadosTable');
-  el.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  el.innerHTML = loadingSpinner();
   try {
     const partidos = await api.get('/partidos');
     if (partidos.length === 0) {
       el.innerHTML = emptyState('resultados', 'No hay partidos registrados.');
       return;
     }
-    el.innerHTML = `<table><thead><tr>
-      <th>Partido</th><th>Torneo</th><th>Fase</th><th>Fecha</th><th>Cancha</th><th>Marcador</th><th>Estado</th><th>Acciones</th>
+    el.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
+      <th>Partido</th><th>Torneo</th><th>Fase</th><th>Fecha</th><th>Cancha</th><th>Marcador</th><th>Estado</th><th class="w-1"></th>
     </tr></thead><tbody>${partidos.map(p => {
       const local = p.equipoLocal?.nombre||'';
       const vis = p.equipoVisitante?.nombre||'';
@@ -499,10 +512,10 @@ async function loadResultados() {
         <td>${esFaseEliminatoria(p.fase) ? faseLabel(p.fase) : `J${p.jornada}`}</td>
         <td>${formatDate(p.fecha)} · ${p.hora}</td>
         <td>${cancha}</td>
-        <td>${fin ? `<strong>${p.golesLocal} - ${p.golesVisitante}</strong>${(p.penalesLocal||p.penalesVisitante) ? ` <span class="badge badge-neutral">Pen. ${p.penalesLocal}-${p.penalesVisitante}</span>` : ''}` : '-'}</td>
+        <td>${fin ? `<strong>${p.golesLocal} - ${p.golesVisitante}</strong>${(p.penalesLocal||p.penalesVisitante) ? ` <span class="badge bg-secondary-lt">Pen. ${p.penalesLocal}-${p.penalesVisitante}</span>` : ''}` : '-'}</td>
         <td>${estadoBadge(p.estado)}</td>
-        <td>${fin
-          ? `<button class="btn btn-outline btn-sm" onclick="viewPartido('${p.id}')">Ver</button>`
+        <td class="text-end">${fin
+          ? `<button class="btn btn-outline-secondary btn-sm" onclick="viewPartido('${p.id}')">Ver</button>`
           : `<button class="btn btn-primary btn-sm" onclick="openResultadoForm('${p.id}','${enc({id:p.id,local,visitante:vis,fase:p.fase,equipoLocal:p.equipoLocal,equipoVisitante:p.equipoVisitante})}')">Registrar</button>`
         }</td>
       </tr>`;
@@ -523,14 +536,17 @@ async function viewPartido(id) {
       return `<tr><td>${e.minuto}'</td><td>${labels[e.tipo]||e.tipo}</td><td>${detalle}</td><td>${e.jugador?.equipo?.nombre||''}</td></tr>`;
     }).join('');
     const penalesHtml = (p.penalesLocal || p.penalesVisitante)
-      ? `<p style="color:var(--text-muted);margin-bottom:8px">Penales: ${p.penalesLocal} - ${p.penalesVisitante}</p>` : '';
+      ? `<p class="text-secondary mb-2">Penales: ${p.penalesLocal} - ${p.penalesVisitante}</p>` : '';
     openModal(`
-      <h2>${local} ${p.golesLocal} - ${p.golesVisitante} ${vis}</h2>
-      <p style="color:var(--text-muted);margin-bottom:8px">${p.torneo?.nombre||''} · ${esFaseEliminatoria(p.fase) ? faseLabel(p.fase) : `Jornada ${p.jornada}`} · ${formatDate(p.fecha)} · ${p.hora}</p>
-      ${penalesHtml}
-      ${eventos ? `<table><thead><tr><th>Min</th><th>Evento</th><th>Jugador</th><th>Equipo</th></tr></thead><tbody>${eventos}</tbody></table>`
-        : '<p style="color:var(--text-muted)">No hay eventos registrados.</p>'}
-      <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Cerrar</button></div>
+      <div class="modal-header"><h5 class="modal-title">${local} ${p.golesLocal} - ${p.golesVisitante} ${vis}</h5>
+        <button type="button" class="btn-close" onclick="closeModal()"></button></div>
+      <div class="modal-body">
+        <p class="text-secondary mb-2">${p.torneo?.nombre||''} · ${esFaseEliminatoria(p.fase) ? faseLabel(p.fase) : `Jornada ${p.jornada}`} · ${formatDate(p.fecha)} · ${p.hora}</p>
+        ${penalesHtml}
+        ${eventos ? `<table class="table table-sm"><thead><tr><th>Min</th><th>Evento</th><th>Jugador</th><th>Equipo</th></tr></thead><tbody>${eventos}</tbody></table>`
+          : '<p class="text-secondary">No hay eventos registrados.</p>'}
+      </div>
+      <div class="modal-footer"><button class="btn btn-link link-secondary" onclick="closeModal()">Cerrar</button></div>
     `);
   } catch (err) { toast(err.message, true); }
 }
@@ -548,33 +564,36 @@ async function openResultadoForm(id, encoded) {
     const isLiguilla = esFaseEliminatoria(p.fase);
 
     openModal(`
-      <h2>Registrar resultado</h2>
-      <p style="color:var(--text-muted);margin-bottom:16px">${p.local} vs ${p.visitante}${isLiguilla ? ` · ${faseLabel(p.fase)}` : ''}</p>
-      <div id="eventosList" style="margin-bottom:16px"></div>
-      <div class="card" style="background:var(--bg)">
-        <strong style="font-size:13px">Agregar evento</strong>
-        <div class="form-row mt-sm">
-          <div class="form-group"><label>Jugador</label><select id="fJugador">${jugadorOpts}</select></div>
-          <div class="form-group"><label>Tipo</label><select id="fTipo" onchange="toggleSustitucionField()">${tipoOpts}</select></div>
-        </div>
-        <div class="form-group" id="fJugadorEntraWrap" style="display:none">
-          <label>Jugador que entra</label>
-          <select id="fJugadorEntra">${jugadorOpts}</select>
-        </div>
-        <div class="form-group"><label>Minuto</label><input id="fMinuto" type="number" min="0" max="120" placeholder="45"></div>
-        <button class="btn btn-outline btn-sm" onclick="addEvento()"><span class="icon-badge">${ICONS.plus}</span> Agregar</button>
-      </div>
-      ${isLiguilla ? `
-        <div class="card">
-          <strong style="font-size:13px">Penales (solo si hubo empate y eliminatoria)</strong>
-          <div class="form-row mt-sm">
-            <div class="form-group"><label>${p.local}</label><input id="fPenalesLocal" type="number" min="0" placeholder="0"></div>
-            <div class="form-group"><label>${p.visitante}</label><input id="fPenalesVisitante" type="number" min="0" placeholder="0"></div>
+      <div class="modal-header"><h5 class="modal-title">Registrar resultado</h5>
+        <button type="button" class="btn-close" onclick="closeModal()"></button></div>
+      <div class="modal-body">
+        <p class="text-secondary mb-3">${p.local} vs ${p.visitante}${isLiguilla ? ` · ${faseLabel(p.fase)}` : ''}</p>
+        <div id="eventosList" class="mb-3"></div>
+        <div class="card card-body bg-light mb-3">
+          <div class="fw-bold small mb-2">Agregar evento</div>
+          <div class="row g-2">
+            <div class="col mb-2"><label class="form-label">Jugador</label><select class="form-select" id="fJugador">${jugadorOpts}</select></div>
+            <div class="col mb-2"><label class="form-label">Tipo</label><select class="form-select" id="fTipo" onchange="toggleSustitucionField()">${tipoOpts}</select></div>
           </div>
+          <div class="mb-2" id="fJugadorEntraWrap" style="display:none">
+            <label class="form-label">Jugador que entra</label>
+            <select class="form-select" id="fJugadorEntra">${jugadorOpts}</select>
+          </div>
+          <div class="mb-2"><label class="form-label">Minuto</label><input class="form-control" id="fMinuto" type="number" min="0" max="120" placeholder="45"></div>
+          <button class="btn btn-outline-primary btn-sm" onclick="addEvento()">${ICONS.plus} Agregar</button>
         </div>
-      ` : ''}
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+        ${isLiguilla ? `
+          <div class="card card-body">
+            <div class="fw-bold small mb-2">Penales (solo si hubo empate y eliminatoria)</div>
+            <div class="row g-2">
+              <div class="col mb-2"><label class="form-label">${p.local}</label><input class="form-control" type="number" min="0" id="fPenalesLocal" placeholder="0"></div>
+              <div class="col mb-2"><label class="form-label">${p.visitante}</label><input class="form-control" type="number" min="0" id="fPenalesVisitante" placeholder="0"></div>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-link link-secondary" onclick="closeModal()">Cancelar</button>
         <button class="btn btn-primary" onclick="saveResultado('${id}')">Finalizar partido</button>
       </div>
     `);
@@ -621,10 +640,10 @@ function renderEventos() {
   if (window._resultadoEventos.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = window._resultadoEventos.map((e,i) => {
     const desc = e.tipo === 'SUSTITUCION' ? `Sale ${e.jugadorNombre}, entra ${e.jugadorEntraNombre}` : `${labels[e.tipo]||e.tipo} - ${e.jugadorNombre}`;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="width:30px;font-weight:700">${e.minuto}'</span>
-      <span style="flex:1">${desc}</span>
-      <button class="btn btn-danger btn-sm" onclick="removeEvento(${i})"><span class="icon-badge">${ICONS.close}</span></button>
+    return `<div class="d-flex align-items-center gap-2 py-1 border-bottom">
+      <span style="width:32px" class="fw-bold">${e.minuto}'</span>
+      <span class="flex-fill">${desc}</span>
+      <button class="btn btn-icon btn-sm text-danger" onclick="removeEvento(${i})">${ICONS.close}</button>
     </div>`;
   }).join('');
 }
@@ -668,39 +687,30 @@ async function loadTesoreria() {
   const tableEl = document.getElementById('tesoreriaPendientes');
   try {
     const resumen = await api.get('/pagos/resumen');
-    statsEl.innerHTML = `
-      <div class="kpi-card">
-        <div class="kpi-icon tone-primary"><span class="icon-badge">${ICONS.wallet}</span></div>
-        <div class="kpi-body"><div class="kpi-value">$${formatMoney(resumen.ingresoDiario.total)}</div><div class="kpi-label">Ingresos hoy</div></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-accent"><span class="icon-badge">${ICONS.trendUp}</span></div>
-        <div class="kpi-body"><div class="kpi-value">$${formatMoney(resumen.ingresoMensual.total)}</div><div class="kpi-label">Ingresos del mes</div></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-secondary"><span class="icon-badge">${ICONS.pagos}</span></div>
-        <div class="kpi-body"><div class="kpi-value">${resumen.pendientes.length}</div><div class="kpi-label">Pagos pendientes</div></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon tone-warning"><span class="icon-badge">${ICONS.info}</span></div>
-        <div class="kpi-body"><div class="kpi-value">$${formatMoney(resumen.montoPendiente)}</div><div class="kpi-label">Monto pendiente</div></div>
-      </div>
-    `;
+    statsEl.innerHTML = [
+      kpiCard('wallet', 'primary', `$${formatMoney(resumen.ingresoDiario.total)}`, 'Ingresos hoy'),
+      kpiCard('trendUp', 'lime', `$${formatMoney(resumen.ingresoMensual.total)}`, 'Ingresos del mes'),
+      kpiCard('pagos', 'azure', resumen.pendientes.length, 'Pagos pendientes'),
+      kpiCard('info', 'warning', `$${formatMoney(resumen.montoPendiente)}`, 'Monto pendiente'),
+    ].join('');
     if (resumen.pendientes.length === 0) {
       tableEl.innerHTML = emptyState('tesoreria', 'No hay pagos pendientes.');
       return;
     }
-    tableEl.innerHTML = `<table><thead><tr>
-      <th>Folio</th><th>Concepto</th><th>Método</th><th>Monto</th><th>Fecha</th><th>Acciones</th>
+    tableEl.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
+      <th>Folio</th><th>Concepto</th><th>Método</th><th>Monto</th><th>Fecha</th><th class="w-1"></th>
     </tr></thead><tbody>${resumen.pendientes.map(p => `<tr>
       <td><strong>${p.folio}</strong></td>
       <td>${p.concepto}</td>
       <td>${p.metodo}</td>
       <td>$${formatMoney(p.monto)}</td>
       <td>${formatDate(p.fecha)}</td>
-      <td class="actions-cell">
-          <button class="btn btn-primary btn-sm" onclick="approvePago('${p.id}')"><span class="icon-badge">${ICONS.check}</span> Aprobar</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectPago('${p.id}')"><span class="icon-badge">${ICONS.close}</span></button></td>
+      <td class="text-end">
+        <div class="btn-list flex-nowrap">
+          <button class="btn btn-primary btn-sm" onclick="approvePago('${p.id}')">${ICONS.check} Aprobar</button>
+          <button class="btn btn-icon btn-sm text-danger" onclick="rejectPago('${p.id}')" title="Rechazar">${ICONS.close}</button>
+        </div>
+      </td>
     </tr>`).join('')}</tbody></table>`;
   } catch (err) { toast(err.message, true); }
 }
@@ -725,11 +735,9 @@ async function loadPagos() {
   const filtros = ['Todos','TARJETA','EFECTIVO','TRANSFERENCIA'];
   const labels = { Todos:'Todos', TARJETA:'Tarjeta', EFECTIVO:'Efectivo', TRANSFERENCIA:'Transferencia' };
 
-  filtroEl.innerHTML = filtros.map(f =>
-    `<button class="pill ${f===pagosFiltro?'active':''}" onclick="selectPagosFiltro('${f}')">${labels[f]}</button>`
-  ).join('');
+  filtroEl.innerHTML = filtros.map(f => pill(labels[f], f === pagosFiltro, `selectPagosFiltro('${f}')`)).join('');
 
-  tableEl.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+  tableEl.innerHTML = loadingSpinner();
   try {
     const pagos = await api.get('/pagos?estado=APROBADO');
     const filtered = pagosFiltro === 'Todos' ? pagos : pagos.filter(p => p.metodo === pagosFiltro);
@@ -737,13 +745,13 @@ async function loadPagos() {
       tableEl.innerHTML = emptyState('pagos', 'No hay pagos registrados.');
       return;
     }
-    tableEl.innerHTML = `<table><thead><tr>
+    tableEl.innerHTML = `<table class="table card-table table-vcenter"><thead><tr>
       <th>Folio</th><th>Concepto</th><th>Método</th><th>Monto</th><th>Fecha</th>
     </tr></thead><tbody>${filtered.map(p => `<tr>
       <td><strong>${p.folio}</strong></td>
       <td>${p.concepto}</td>
       <td>${labels[p.metodo]||p.metodo}</td>
-      <td><span class="badge badge-success">$${formatMoney(p.monto)}</span></td>
+      <td><span class="badge bg-success-lt">$${formatMoney(p.monto)}</span></td>
       <td>${formatDate(p.fecha)}</td>
     </tr>`).join('')}</tbody></table>`;
   } catch (err) { toast(err.message, true); }

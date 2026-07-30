@@ -4,27 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIFUT Admin - Iniciar sesión</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
-  <div class="login-page">
-    <div class="login-card">
-      <h1>SIFut</h1>
-      <p>Panel de Administración</p>
-      <div id="loginError" class="error"></div>
-      <form id="loginForm">
-        <div class="form-group">
-          <label>Correo electrónico</label>
-          <input type="email" id="email" placeholder="admin@sifut.com" required>
+<body class="border-top-wide border-primary d-flex flex-column">
+  <div class="page page-center">
+    <div class="container container-tight py-4">
+      <div class="text-center mb-4">
+        <span class="brand-title">SIFut</span>
+        <div class="text-secondary mt-1">Panel de Administración</div>
+      </div>
+      <div class="card card-md">
+        <div class="card-body">
+          <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
+          <form id="loginForm" autocomplete="off">
+            <div class="mb-3">
+              <label class="form-label">Correo electrónico</label>
+              <input type="email" id="email" class="form-control" placeholder="admin@sifut.com" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Contraseña</label>
+              <input type="password" id="password" class="form-control" placeholder="Contraseña" required>
+            </div>
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100" id="loginBtn">Iniciar sesión</button>
+            </div>
+          </form>
         </div>
-        <div class="form-group">
-          <label>Contraseña</label>
-          <input type="password" id="password" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" id="loginBtn" style="margin-top:8px">Iniciar sesión</button>
-      </form>
+      </div>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/js/tabler.min.js"></script>
   <script src="js/api.js"></script>
   <script>
     if (api.isAuthenticated()) window.location.href = 'panel.html';
@@ -35,7 +46,7 @@
       const err = document.getElementById('loginError');
       btn.disabled = true;
       btn.textContent = 'Ingresando...';
-      err.style.display = 'none';
+      err.classList.add('d-none');
       try {
         await api.login(
           document.getElementById('email').value,
@@ -44,7 +55,7 @@
         window.location.href = 'panel.html';
       } catch (ex) {
         err.textContent = ex.message;
-        err.style.display = 'block';
+        err.classList.remove('d-none');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Iniciar sesión';

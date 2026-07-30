@@ -2,7 +2,7 @@
 // Uso: ICONS.sedes, ICONS.canchas, etc. Cada valor es un string <svg>...</svg>.
 // currentColor hereda el color de texto del elemento contenedor.
 
-const ICON_WRAP_START = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
+const ICON_WRAP_START = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">';
 const ICON_WRAP_END = '</svg>';
 
 function svg(path) {
