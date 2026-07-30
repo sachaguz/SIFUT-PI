@@ -9,6 +9,7 @@ import AdminTesoreriaScreen from '../screens/admin/AdminTesoreriaScreen';
 import AdminUsuariosScreen from '../screens/admin/AdminUsuariosScreen';
 import AdminEquiposScreen from '../screens/admin/AdminEquiposScreen';
 import AdminTorneosScreen from '../screens/admin/AdminTorneosScreen';
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import LogoutButton from '../components/LogoutButton';
 import HamburgerButton from './HamburgerButton';
 import AdminSidebar from './AdminSidebar';
@@ -19,6 +20,7 @@ const Tab = createBottomTabNavigator();
 const isWeb = Platform.OS === 'web';
 
 const ICONS = {
+  Resumen: 'grid-outline',
   Sedes: 'business-outline',
   Canchas: 'football-outline',
   Reservas: 'calendar-outline',
@@ -49,6 +51,7 @@ function AdminTabNavigator() {
         ),
       })}
     >
+      {isWeb && <Tab.Screen name="Resumen" component={AdminDashboardScreen} options={{ title: 'Resumen' }} />}
       <Tab.Screen name="Sedes" component={AdminSedesScreen} options={{ title: 'Sedes' }} />
       <Tab.Screen name="Canchas" component={AdminCanchasScreen} options={{ title: 'Canchas' }} />
       <Tab.Screen name="Reservas" component={AdminReservasScreen} options={{ title: 'Reservas' }} />
