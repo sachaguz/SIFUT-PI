@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSidebar } from './SidebarContext';
 import { colors, fonts, spacing } from '../theme/colors';
@@ -44,7 +44,10 @@ export default function AdminSidebar({ state, descriptors, navigation, icons }) 
   function renderPanelContent() {
     return (
       <View style={styles.panelInner}>
-        <Text style={styles.brand}>SIFut Admin</Text>
+        <View style={styles.brandRow}>
+          <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.brand}>SIFut Admin</Text>
+        </View>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label = options.title ?? route.name;
@@ -104,12 +107,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
     paddingHorizontal: spacing.sm,
   },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  logo: {
+    width: 28,
+    height: 28,
+  },
   brand: {
     fontFamily: fonts.extraBold,
     fontSize: 18,
     color: colors.primary,
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.sm,
   },
   item: {
     flexDirection: 'row',
