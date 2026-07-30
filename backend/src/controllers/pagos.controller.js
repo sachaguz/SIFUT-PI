@@ -2,9 +2,16 @@ const prisma = require('../config/database');
 
 async function getAll(req, res, next) {
   try {
+    const { metodo, estado, desde, hasta } = req.query;
     const where = {};
-    if (req.query.metodo) where.metodo = req.query.metodo;
-    if (req.query.estado) where.estado = req.query.estado;
+    if (metodo) where.metodo = metodo;
+    if (estado) where.estado = estado;
+    if (desde || hasta) {
+      where.fecha = {
+        ...(desde ? { gte: new Date(new Date(desde).setHours(0, 0, 0, 0)) } : {}),
+        ...(hasta ? { lt: new Date(new Date(hasta).setHours(23, 59, 59, 999)) } : {}),
+      };
+    }
 
     const pagos = await prisma.pago.findMany({
       where,
