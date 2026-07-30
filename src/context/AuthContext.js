@@ -17,6 +17,12 @@ export function AuthProvider({ children }) {
         return;
       }
       const { data } = await api.get('/auth/profile');
+      if (Platform.OS === 'web' && data.role !== 'ADMIN') {
+        await storage.deleteItemAsync('accessToken');
+        await storage.deleteItemAsync('refreshToken');
+        setLoading(false);
+        return;
+      }
       setUser(data);
     } catch {
       await storage.deleteItemAsync('accessToken');
