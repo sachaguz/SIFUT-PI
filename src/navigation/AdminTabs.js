@@ -8,6 +8,7 @@ import AdminResultadosScreen from '../screens/admin/AdminResultadosScreen';
 import AdminTesoreriaScreen from '../screens/admin/AdminTesoreriaScreen';
 import AdminUsuariosScreen from '../screens/admin/AdminUsuariosScreen';
 import AdminEquiposScreen from '../screens/admin/AdminEquiposScreen';
+import AdminTorneosScreen from '../screens/admin/AdminTorneosScreen';
 import LogoutButton from '../components/LogoutButton';
 import HamburgerButton from './HamburgerButton';
 import AdminSidebar from './AdminSidebar';
@@ -25,6 +26,7 @@ const ICONS = {
   Tesoreria: 'cash-outline',
   Usuarios: 'people-outline',
   Equipos: 'shirt-outline',
+  Torneos: 'trophy-outline',
 };
 
 // Bottom tabs only fit the core operational screens on a phone. The web
@@ -54,6 +56,7 @@ function AdminTabNavigator() {
       <Tab.Screen name="Tesoreria" component={AdminTesoreriaScreen} options={{ title: 'Tesorería' }} />
       {isWeb && <Tab.Screen name="Usuarios" component={AdminUsuariosScreen} options={{ title: 'Usuarios' }} />}
       {isWeb && <Tab.Screen name="Equipos" component={AdminEquiposScreen} options={{ title: 'Equipos' }} />}
+      {isWeb && <Tab.Screen name="Torneos" component={AdminTorneosScreen} options={{ title: 'Torneos' }} />}
     </Tab.Navigator>
   );
 }

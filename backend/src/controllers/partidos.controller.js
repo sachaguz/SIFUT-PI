@@ -81,6 +81,15 @@ async function update(req, res, next) {
   }
 }
 
+async function remove(req, res, next) {
+  try {
+    await prisma.partido.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Partido eliminado' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function registrarResultado(req, res, next) {
   try {
     const { golesLocal, golesVisitante, penalesLocal, penalesVisitante, estadisticas } = req.body;
@@ -194,4 +203,4 @@ async function removeEvento(req, res, next) {
   }
 }
 
-module.exports = { getAll, getById, create, update, registrarResultado, addEvento, removeEvento };
+module.exports = { getAll, getById, create, update, remove, registrarResultado, addEvento, removeEvento };

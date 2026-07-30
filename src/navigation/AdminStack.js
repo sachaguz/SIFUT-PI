@@ -8,7 +8,13 @@ import AdminPagosRealizadosScreen from '../screens/admin/AdminPagosRealizadosScr
 import AdminReportesScreen from '../screens/admin/AdminReportesScreen';
 import AdminUsuarioFormScreen from '../screens/admin/AdminUsuarioFormScreen';
 import AdminEquipoFormScreen from '../screens/admin/AdminEquipoFormScreen';
+import AdminTorneoDetalleScreen from '../screens/admin/AdminTorneoDetalleScreen';
 import PartidoDetalleScreen from '../screens/shared/PartidoDetalleScreen';
+// Reused as-is: these forms have no organizador-specific navigation (only
+// navigation.goBack()), so admin gets full create+edit for free instead of
+// a duplicate screen.
+import OrgTorneoFormScreen from '../screens/organizador/OrgTorneoFormScreen';
+import OrgPartidoFormScreen from '../screens/organizador/OrgPartidoFormScreen';
 import { stackScreenOptions } from './navigationTheme';
 
 const Stack = createNativeStackNavigator();
@@ -34,6 +40,9 @@ export default function AdminStack() {
       <Stack.Screen name="AdminReportes" component={AdminReportesScreen} options={{ title: 'Reportes' }} />
       <Stack.Screen name="AdminUsuarioForm" component={AdminUsuarioFormScreen} options={{ title: 'Usuario' }} />
       <Stack.Screen name="AdminEquipoForm" component={AdminEquipoFormScreen} options={{ title: 'Equipo' }} />
+      <Stack.Screen name="AdminTorneoDetalle" component={AdminTorneoDetalleScreen} options={{ title: 'Torneo' }} />
+      <Stack.Screen name="AdminTorneoForm" component={OrgTorneoFormScreen} options={{ title: 'Torneo' }} />
+      <Stack.Screen name="AdminPartidoForm" component={OrgPartidoFormScreen} options={{ title: 'Partido' }} />
     </Stack.Navigator>
   );
 }
