@@ -6,7 +6,7 @@ import SectionHeader from '../../components/SectionHeader';
 import PillSelector from '../../components/PillSelector';
 import PrimaryButton from '../../components/PrimaryButton';
 import Card from '../../components/Card';
-import api from '../../services/api';
+import api, { localDateString } from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 function buildDateOptions() {
@@ -16,9 +16,9 @@ function buildDateOptions() {
   const dayAfter = new Date(today);
   dayAfter.setDate(dayAfter.getDate() + 2);
   return [
-    { label: 'Hoy', value: today.toISOString().substring(0, 10) },
-    { label: 'Mañana', value: tomorrow.toISOString().substring(0, 10) },
-    { label: 'Pasado mañana', value: dayAfter.toISOString().substring(0, 10) },
+    { label: 'Hoy', value: localDateString(today) },
+    { label: 'Mañana', value: localDateString(tomorrow) },
+    { label: 'Pasado mañana', value: localDateString(dayAfter) },
   ];
 }
 

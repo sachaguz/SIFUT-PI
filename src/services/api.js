@@ -74,6 +74,19 @@ export function formatDate(isoString) {
   return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
 }
 
+// Dates sent to the backend are nominal calendar days ("YYYY-MM-DD"),
+// parsed there as UTC midnight. Building that string with toISOString()
+// on a real Date (which carries the current time-of-day) converts through
+// UTC first, so anyone west of UTC gets bumped to tomorrow once local
+// time crosses into the next UTC day (e.g. after 6pm in UTC-6). Reading
+// the local calendar fields directly avoids that shift entirely.
+export function localDateString(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function tipoLabel(tipo) {
   const map = { FUTBOL5: 'Fútbol 5', FUTBOL7: 'Fútbol 7', FUTBOL11: 'Fútbol 11' };
   return map[tipo] || tipo;

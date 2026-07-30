@@ -8,7 +8,7 @@ import PillSelector from '../../components/PillSelector';
 import FormInput from '../../components/FormInput';
 import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
-import api, { estadoLabel, formatDate } from '../../services/api';
+import api, { estadoLabel, formatDate, localDateString } from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 const METODOS = ['Todos', 'TARJETA', 'EFECTIVO', 'TRANSFERENCIA'];
@@ -19,11 +19,11 @@ const ESTADO_TONE = { APROBADO: 'success', PENDIENTE: 'warning', RECHAZADO: 'dan
 function haceUnMesISO() {
   const d = new Date();
   d.setMonth(d.getMonth() - 1);
-  return d.toISOString().slice(0, 10);
+  return localDateString(d);
 }
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateString();
 }
 
 export default function AdminPagosRealizadosScreen() {

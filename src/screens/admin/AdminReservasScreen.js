@@ -10,14 +10,14 @@ import ListRow from '../../components/ListRow';
 import Badge from '../../components/Badge';
 import PillSelector from '../../components/PillSelector';
 import FormInput from '../../components/FormInput';
-import api, { estadoLabel } from '../../services/api';
+import api, { estadoLabel, localDateString } from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 const ESTADOS = ['Todas', 'CONFIRMADA', 'COMPLETADA', 'CANCELADA'];
 const TODAS_SEDES = 'Todas las sedes';
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateString();
 }
 
 export default function AdminReservasScreen() {

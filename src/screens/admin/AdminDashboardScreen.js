@@ -6,7 +6,7 @@ import SectionHeader from '../../components/SectionHeader';
 import Card from '../../components/Card';
 import FormInput from '../../components/FormInput';
 import BarChart from '../../components/BarChart';
-import api from '../../services/api';
+import api, { localDateString } from '../../services/api';
 import { colors, spacing, typography } from '../../theme/colors';
 
 const METODO_LABELS = { TARJETA: 'Tarjeta', EFECTIVO: 'Efectivo', TRANSFERENCIA: 'Transferencia' };
@@ -15,11 +15,11 @@ const ROL_LABELS = { ADMIN: 'Admin', ORGANIZADOR: 'Organizador', USUARIO: 'Usuar
 function haceUnMesISO() {
   const d = new Date();
   d.setMonth(d.getMonth() - 1);
-  return d.toISOString().slice(0, 10);
+  return localDateString(d);
 }
 
 function hoyISO() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateString();
 }
 
 export default function AdminDashboardScreen() {
