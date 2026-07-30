@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionHeader from '../../components/SectionHeader';
@@ -55,7 +56,15 @@ export default function AdminEquiposScreen({ navigation }) {
           title={equipo.nombre}
           subtitle={`${equipo.categoria} · ${(equipo.torneos || []).map((t) => t.nombre).join(', ') || 'Sin liga'}`}
           meta={`${equipo._count?.jugadores || 0} jugadores`}
-          onPress={() => navigation.navigate('AdminEquipoForm', { equipo })}
+          right={(
+            <TouchableOpacity
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onPress={() => navigation.navigate('AdminEquipoForm', { equipo })}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+          onPress={() => navigation.navigate('AdminJugadores', { equipoId: equipo.id, equipoNombre: equipo.nombre })}
         />
       ))}
 

@@ -9,6 +9,7 @@ import AdminReportesScreen from '../screens/admin/AdminReportesScreen';
 import AdminUsuarioFormScreen from '../screens/admin/AdminUsuarioFormScreen';
 import AdminEquipoFormScreen from '../screens/admin/AdminEquipoFormScreen';
 import AdminTorneoDetalleScreen from '../screens/admin/AdminTorneoDetalleScreen';
+import AdminJugadoresScreen from '../screens/admin/AdminJugadoresScreen';
 import PartidoDetalleScreen from '../screens/shared/PartidoDetalleScreen';
 // Reused as-is: these forms have no organizador-specific navigation (only
 // navigation.goBack()), so admin gets full create+edit for free instead of
@@ -43,6 +44,7 @@ export default function AdminStack() {
       <Stack.Screen name="AdminTorneoDetalle" component={AdminTorneoDetalleScreen} options={{ title: 'Torneo' }} />
       <Stack.Screen name="AdminTorneoForm" component={OrgTorneoFormScreen} options={{ title: 'Torneo' }} />
       <Stack.Screen name="AdminPartidoForm" component={OrgPartidoFormScreen} options={{ title: 'Partido' }} />
+      <Stack.Screen name="AdminJugadores" component={AdminJugadoresScreen} options={{ title: 'Jugadores' }} />
     </Stack.Navigator>
   );
 }
