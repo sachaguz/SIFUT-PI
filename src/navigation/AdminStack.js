@@ -7,6 +7,7 @@ import AdminRegistroResultadoScreen from '../screens/admin/AdminRegistroResultad
 import AdminPagosRealizadosScreen from '../screens/admin/AdminPagosRealizadosScreen';
 import AdminReportesScreen from '../screens/admin/AdminReportesScreen';
 import AdminUsuarioFormScreen from '../screens/admin/AdminUsuarioFormScreen';
+import AdminEquipoFormScreen from '../screens/admin/AdminEquipoFormScreen';
 import PartidoDetalleScreen from '../screens/shared/PartidoDetalleScreen';
 import { stackScreenOptions } from './navigationTheme';
 
@@ -32,6 +33,7 @@ export default function AdminStack() {
       />
       <Stack.Screen name="AdminReportes" component={AdminReportesScreen} options={{ title: 'Reportes' }} />
       <Stack.Screen name="AdminUsuarioForm" component={AdminUsuarioFormScreen} options={{ title: 'Usuario' }} />
+      <Stack.Screen name="AdminEquipoForm" component={AdminEquipoFormScreen} options={{ title: 'Equipo' }} />
     </Stack.Navigator>
   );
 }
