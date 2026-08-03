@@ -10,12 +10,24 @@ scrape_configs:
         labels:
           instance: 'api-private'
 
+  # api-1/api-2 are the instances that actually serve real traffic
+  # (nginx load-balances /api/ to them, never to api-private) - scrape
+  # them directly over the internal Docker network so their counters
+  # (not api-private's, which never sees a real user request) are what
+  # shows up in Grafana.
   - job_name: 'sifut-api-1'
     metrics_path: /metrics
     static_configs:
-      - targets: ['nginx:8080']
+      - targets: ['api-1:3000']
         labels:
-          instance: 'api-via-nginx'
+          instance: 'api-1'
+
+  - job_name: 'sifut-api-2'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['api-2:3000']
+        labels:
+          instance: 'api-2'
 
   - job_name: 'nginx'
     metrics_path: /nginx_status

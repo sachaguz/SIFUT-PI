@@ -18,6 +18,16 @@ function createApp(options = {}) {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // Exposed on every instance (public and private) - api-1/api-2 are the
+  // ones actually serving real traffic, so their counters are the ones
+  // worth scraping. api-private gets its own copy too since it runs the
+  // same metricsMiddleware, but never sees real user requests.
+  app.get('/metrics', async (_req, res) => {
+    const { register } = require('./middleware/metrics');
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  });
+
   if (options.public) {
     app.use('/api/auth', require('./routes/auth.routes'));
     app.use('/api/sedes', require('./routes/sedes.routes'));
@@ -34,8 +44,6 @@ function createApp(options = {}) {
   }
 
   if (options.private) {
-    const { register } = require('./middleware/metrics');
-
     app.use('/api/auth', require('./routes/auth.routes'));
     app.use('/api/sedes', require('./routes/sedes.routes'));
     app.use('/api/canchas', require('./routes/canchas.routes'));
@@ -48,11 +56,6 @@ function createApp(options = {}) {
     app.use('/api/usuarios', require('./routes/usuarios.routes'));
     app.use('/api/pagos', require('./routes/pagos.routes'));
     app.use('/api/estadisticas', require('./routes/estadisticas.routes'));
-
-    app.get('/metrics', async (_req, res) => {
-      res.set('Content-Type', register.contentType);
-      res.end(await register.metrics());
-    });
   }
 
   app.use(errorHandler);
